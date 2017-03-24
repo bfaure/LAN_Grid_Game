@@ -165,7 +165,7 @@ class eight_neighbor_grid(QWidget):
 			x_start = x*self.horizontal_step
 			y_start = y*self.horizontal_step
 			qp.setBrush(QColor(self.opponent_color[0],self.opponent_color[1],self.opponent_color[2]))
-			qp.drawRect(x_start,y_start,self.horizontal_step,self.vertical_step)
+			qp.drawRect(int(x_start),int(y_start),self.horizontal_step,self.vertical_step)
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
