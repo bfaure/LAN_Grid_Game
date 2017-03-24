@@ -165,7 +165,7 @@ class eight_neighbor_grid(QWidget):
 			x_start = x*self.horizontal_step
 			y_start = y*self.horizontal_step
 			qp.setBrush(QColor(self.opponent_color[0],self.opponent_color[1],self.opponent_color[2]))
-			qp.drawRect(int(x_start),int(y_start),self.horizontal_step,self.vertical_step)
+			qp.drawRect(x_start,y_start,self.horizontal_step,self.vertical_step)
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
@@ -239,15 +239,24 @@ class eight_neighbor_grid(QWidget):
 		t = grid_worker(self)
 		t.job = "bullet"
 		t.bullet_direction = bullet_direction
-		t.bullet_start = [start_x,start_y]
+		t.bullet_start = [int(start_x),int(start_y)]
 		t.num_cols = self.num_cols
 		t.num_rows = self.num_rows
 		self.worker_threads.append(t)
 		t.start()
 
 	def opponent_move(self,x,y):
-		self.opponent_location = [x,y]
+		self.opponent_location = [int(x),int(y)]
 		self.repaint()
+
+	def set_current_location(self,location_descriptor):
+		if location_descriptor=="opposite":
+			for y in range(self.num_rows):
+				for x in range(self.num_cols):
+					if self.cells[y][x].state()==1:
+						self.cells[y][x].set_free()
+		self.current_location = [self.num_cols-1,self.num_rows-1]
+		self.cells[self.num_cols-1][self.num_rows-1].set_occupied()
 
 class sender_thread(QThread):
 	def __init__(self):
@@ -354,6 +363,7 @@ class main_window(QWidget):
 
 		if items[0]=="new":
 			self.connect(opp_ip=items[1])
+			self.grid.set_current_location("opposite")
 			return
 
 		if items[0]=="shoot":
