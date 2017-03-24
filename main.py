@@ -350,22 +350,21 @@ class main_window(QWidget):
 		items = update.split("|")
 
 		if items[0]=="new":
-			_,ok = QInputDialog.getText(self,"New Request, Accept?","Click Okay or Cancel")
-			if ok:
-				self.connect(opp_ip=items[1])
-			else:
-				return
+			self.connect(opp_ip=items[1])
+			return
 
 		if items[0]=="shoot":
 			bullet_direction = items[1]
 			x = items[2].split(":")[1]
 			y = items[3].split(":")[1]
 			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
+			return
 
 		if items[0]=="move":
 			x = items[1].split(":")[1]
 			y = items[2].split(":")[1]
 			self.grid.opponent_move(x,y)
+			return
 
 	def connect(self,opp_ip=None):
 		if opp_ip==None:
@@ -387,12 +386,13 @@ class main_window(QWidget):
 		self.opponent_ip = resp
 		self.set_connected(True)
 
-		sender = sender_thread()
-		sender.host = self.opponent_ip
-		sender.message = "new|"+str(gethostbyname(gethostname()))
-		sender.start()
-		sender.is_done = False 
-		self.sender_threads.append(sender)
+		if opp_ip==None:
+			sender = sender_thread()
+			sender.host = self.opponent_ip
+			sender.message = "new|"+str(gethostbyname(gethostname()))
+			sender.start()
+			sender.is_done = False 
+			self.sender_threads.append(sender)
 
 	def disconnect(self):
 		self.opponent_ip = None
