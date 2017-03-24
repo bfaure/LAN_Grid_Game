@@ -103,12 +103,13 @@ class eight_neighbor_grid(QWidget):
 		#self.connect(self,SIGNAL("call_worker()"),self.worker_thread.run)
 		self.grid_line_color = [0,0,0]
 		self.free_color = [255,255,255]
-		self.occupied_color = [128,128,128]
+		self.occupied_color = [0,128,255]
 		self.bullet_color = [255,0,0]
 		self.last_direction = "right"
 		self.bullet_direction = None
 		self.current_location = None
 		self.opponent_location = None
+		self.opponent_color = [128,255,0]
 		self.init_cells()
 
 	def paintEvent(self,e):
