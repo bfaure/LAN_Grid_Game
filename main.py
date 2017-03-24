@@ -40,7 +40,7 @@ class grid_worker(QThread):
 		self.job = None 
 
 	def run(self):
-		sleep_time = 0.01
+		sleep_time = 0.1
 		if self.job=="bullet":
 			cur_x,cur_y = self.bullet_start
 
@@ -295,6 +295,10 @@ class main_window(QWidget):
 
 		self.layout = QVBoxLayout(self)
 		self.grid = eight_neighbor_grid()
+
+		if sys.platform in ["apple","Apple","darwin","Darwin"]:
+			self.min_height = 700
+			self.min_width = 700
 
 		if sys.platform in ["linux","linux32","win32"]: 
 			self.layout.addSpacing(25)
