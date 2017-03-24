@@ -108,6 +108,7 @@ class eight_neighbor_grid(QWidget):
 		self.last_direction = "right"
 		self.bullet_direction = None
 		self.current_location = None
+		self.opponent_location = None
 		self.init_cells()
 
 	def paintEvent(self,e):
@@ -156,6 +157,14 @@ class eight_neighbor_grid(QWidget):
 
 				qp.setBrush(QColor(self.bullet_color[0],self.bullet_color[1],self.bullet_color[2]))
 				qp.drawEllipse(render_loc[0]+5,render_loc[1]+5,4,4)
+
+		if self.opponent_location!=None:
+			x = self.opponent_location[0]
+			y = self.opponent_location[1]
+			x_start = x*self.horizontal_step
+			y_start = y*self.horizontal_step
+			qp.setBrush(QColor(self.opponent_color[0],self.opponent_color[1],self.opponent_color[2]))
+			qp.drawRect(x_start,y_start,self.horizontal_step,self.vertical_step)
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
@@ -224,6 +233,18 @@ class eight_neighbor_grid(QWidget):
 			t.start()
 			self.clean_worker_threads()
 			return [t.bullet_direction,t.bullet_start]
+
+	def opponent_shoot(self,bullet_direction,start_x,start_y):
+		t = grid_worker(self)
+		t.job = "bullet"
+		t.bullet_direction = bullet_direction
+		t.num_cols = self.num_cols
+		t.num_rows = self.num_rows
+		self.worker_threads.append(t)
+		t.start()
+
+	def opponent_move(self,x,y):
+		self.opponent_location = [x,y]
 
 class sender_thread(QThread):
 	def __init__(self):
@@ -324,23 +345,54 @@ class main_window(QWidget):
 		self.show()
 
 	def receive_update(self,update):
-		print(update)
+		if len(update)==0: return 
 
-	def connect(self):
-		while True:
-			resp,ok = QInputDialog.getText(self,"Connection","Enter IP (192.168.1.x): ")
-			if not ok: return 
+		items = update.split("|")
 
-			broken = resp.split(".")
-			if len(broken)==4:
-				for b in broken:
-					try:
-						int(b)
-					except:
-						continue 
-				break
+		if items[0]=="new":
+			_,ok = QInputDialog.getText(self,"New Request, Accept?","Click Okay or Cancel")
+			if ok:
+				self.connect(opp_ip=items[1])
+			else:
+				return
+
+		if items[0]=="shoot":
+			bullet_direction = items[1]
+			x = items[2].split(":")[1]
+			y = items[3].split(":")[1]
+			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
+
+		if items[0]=="move":
+			x = items[1].split(":")[1]
+			y = items[2].split(":")[1]
+			self.grid.opponent_move(x,y)
+
+	def connect(self,opp_ip=None):
+		if opp_ip==None:
+			while True:
+				resp,ok = QInputDialog.getText(self,"Connection","Enter IP (192.168.1.x): ")
+				if not ok: return 
+
+				broken = resp.split(".")
+				if len(broken)==4:
+					for b in broken:
+						try:
+							int(b)
+						except:
+							continue 
+					break
+		else:
+			resp = opp_ip
+
 		self.opponent_ip = resp
 		self.set_connected(True)
+
+		sender = sender_thread()
+		sender.host = self.opponent_ip
+		sender.message = "new|"+str(gethostbyname(gethostname()))
+		sender.start()
+		sender.is_done = False 
+		self.sender_threads.append(sender)
 
 	def disconnect(self):
 		self.opponent_ip = None
