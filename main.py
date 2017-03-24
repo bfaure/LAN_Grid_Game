@@ -238,11 +238,12 @@ class sender_thread(QThread):
 	def connect(self):
 		self.addr = (self.host, self.port)
 		self.UDPSock = socket(AF_INET, SOCK_DGRAM)
-		print ("Sender thread online.")
 		return True
 
 	def send(self):
 		self.UDPSock.sendto(str(self.message), self.addr)
+		self.UDPSock.close()
+		self.is_done = True
 
 class receive_thread(QThread):
 
@@ -288,6 +289,8 @@ class main_window(QWidget):
 		self.receiver = receive_thread()
 		self.receiver.start()
 
+		self.sender_threads = []
+
 		QObject.connect(self.receiver,SIGNAL("got_message(QString)"),self.receive_update)
 
 		self.min_width = 625
@@ -320,8 +323,8 @@ class main_window(QWidget):
 		self.setFixedHeight(self.min_height)
 		self.show()
 
-	def receive_update(self):
-		print("Got update")
+	def receive_update(self,update):
+		print(update)
 
 	def connect(self):
 		while True:
@@ -337,6 +340,7 @@ class main_window(QWidget):
 						continue 
 				break
 		self.opponent_ip = resp
+		self.set_connected(True)
 
 	def disconnect(self):
 		self.opponent_ip = None
@@ -368,6 +372,14 @@ class main_window(QWidget):
 				sender.host = self.opponent_ip
 				sender.message = message
 				sender.start()
+				sender.is_done=False
+				self.sender_threads.append(sender)
+				self.clean_sender_threads()
+
+	def clean_sender_threads(self):
+		for s in self.sender_threads:
+			if s.is_done:
+				del self.sender_threads[self.sender_threads.index(s)]
 
 def main():
 	global pyqt_app
