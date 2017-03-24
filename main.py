@@ -239,6 +239,7 @@ class eight_neighbor_grid(QWidget):
 		t = grid_worker(self)
 		t.job = "bullet"
 		t.bullet_direction = bullet_direction
+		t.bullet_start = [start_x,start_y]
 		t.num_cols = self.num_cols
 		t.num_rows = self.num_rows
 		self.worker_threads.append(t)
@@ -246,6 +247,7 @@ class eight_neighbor_grid(QWidget):
 
 	def opponent_move(self,x,y):
 		self.opponent_location = [x,y]
+		self.repaint()
 
 class sender_thread(QThread):
 	def __init__(self):
