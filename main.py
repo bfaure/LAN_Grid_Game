@@ -472,10 +472,35 @@ class eight_neighbor_grid(QWidget):
 				t2.start()
 				self.worker_threads.append(t2)
 
+			if self.user_has_gem>1:
+				if bullet_direction in ["left","right"]: perp_bullet_direction = "up"
+				else: perp_bullet_direction = "left"
+				t3 = grid_worker(self)
+				t3.job = "bullet"
+				t3.player = "me"
+				t3.bullet_direction = perp_bullet_direction
+				t3.bullet_start = bullet_start
+				t3.num_cols = self.num_cols
+				t3.num_rows = self.num_rows
+				t3.start()
+				self.worker_threads.append(t3)
+
+				t4 = grid_worker(self)
+				t4.job = "bullet"
+				t4.player = "me"
+				t4.bullet_direction = self.get_opposite_direction(perp_bullet_direction)
+				t4.bullet_start = bullet_start
+				t4.num_cols = self.num_cols
+				t4.num_rows = self.num_rows
+				t4.start()
+				self.worker_threads.append(t4)
+
 			self.clean_worker_threads()			
 
-			if self.user_has_gem>1:
+			if self.user_has_gem==1:
 				return [t.bullet_direction,t.bullet_start,t2.bullet_direction]
+			elif self.user_has_gem>1:
+				return [None,t.bullet_start,None]
 			else:
 				return [t.bullet_direction,t.bullet_start,None]
 
@@ -752,6 +777,15 @@ class main_window(QWidget):
 			y = items[3].split(":")[1]
 			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
 			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
+			return
+
+		if items[0]=="shoot4":
+			x = items[1].split(":")[1]
+			y = items[2].split(":")[1]
+			self.grid.opponent_shoot(bullet_direction="up",start_x=x,start_y=y)
+			self.grid.opponent_shoot(bullet_direction="down",start_x=x,start_y=y)
+			self.grid.opponent_shoot(bullet_direction="left",start_x=x,start_y=y)
+			self.grid.opponent_shoot(bullet_direction="right",start_x=x,start_y=y)
 
 		if items[0]=="move":
 			x = items[1].split(":")[1]
@@ -831,7 +865,9 @@ class main_window(QWidget):
 		if action!=None:
 			if action=="shoot": 
 				bullet_direction, bullet_start, o_bullet_direction = self.grid.action(action)
-				if o_bullet_direction==None:
+				if bullet_direction==None:
+					message = "shoot4|x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
+				elif o_bullet_direction==None:
 					message = "shoot|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
 				else:
 					message = "shoot2|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])+"|"+o_bullet_direction
