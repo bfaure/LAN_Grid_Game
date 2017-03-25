@@ -373,7 +373,7 @@ class main_window(QWidget):
 		self.min_height = 425
 
 		self.layout = QVBoxLayout(self)
-		self.grid = eight_neighbor_grid()
+		self.grid = eight_neighbor_grid(parent=self)
 
 		if sys.platform in ["apple","Apple","darwin","Darwin"]:
 			self.min_height = 470
