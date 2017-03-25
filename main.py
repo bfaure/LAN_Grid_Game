@@ -144,8 +144,17 @@ class eight_neighbor_grid(QWidget):
 		qp.end()
 
 		if self.game_over:
+
+			for y in range(self.num_rows):
+				for x in range(self.num_cols):
+					if self.cells[x][y].state()==1:
+						self.cells[x][y].set_free()
+			self.cells[0][0].set_occupied()
+			self.current_location = [0,0]
 			self.parent.game_over()
 			self.game_over = False
+
+
 
 	def drawWidget(self,qp):
 		size = self.size()
