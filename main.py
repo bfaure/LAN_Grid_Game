@@ -328,6 +328,8 @@ class eight_neighbor_grid(QWidget):
 			idx = self.gem_locations.index([self.current_location[0],self.current_location[1]])
 			del self.gem_locations[idx]
 			self.user_has_gem += 1
+			sound_file = "resources/126422__cabeeno-rossley__level-up.wav"
+			QSound(sound_file).play()
 
 		if self.opponent_location!=None:
 			x = self.opponent_location[0]
@@ -833,6 +835,10 @@ class main_window(QWidget):
 					message = "shoot|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
 				else:
 					message = "shoot2|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])+"|"+o_bullet_direction
+
+				shoot_sound = "resources/126423__cabeeno-rossley__shoot-laser.wav"
+				QSound.play(shoot_sound)
+
 			else: 
 				new_location = self.grid.move(action)
 				message = "move|"+"x:"+str(new_location[0])+"|y:"+str(new_location[1])
