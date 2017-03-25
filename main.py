@@ -125,17 +125,100 @@ class eight_neighbor_grid(QWidget):
 				row.append(cur_cell)
 			self.cells.append(row)
 
-		self.blocked_cells = [	[0,5],[1,6],[7,20],[9,14],[9,15],[9,16],
-								[25,15],[20,16],[15,8],[30,15],[32,21],
-								[22,22],[23,8],[24,8],[23,8],[24,7]]
+		self.init_blocked_cells()
+
+	def init_blocked_cells(self):
+
+		self.user_has_gem = 0
+		self.blocked_cells = []
+		self.blocked_cell_life = []
+		generate = False
+		if generate:
+			num_blocked_cells = 150
+
+			while len(self.blocked_cells)<num_blocked_cells:
+				x_coord = random.randint(0,self.num_cols-1)
+				y_coord = random.randint(0,self.num_rows-1)
+				if x_coord==0 and y_coord==0:
+					continue
+				if x_coord==self.num_cols-1 and y_coord==self.num_rows-1:
+					continue 
+				self.blocked_cells.append([x_coord,y_coord])
+				self.blocked_cell_life.append(10)
+
+			# select 8 random regions:
+			self.hard_to_traverse_regions = []
+			num_regions = 4
+			for _ in range(num_regions):
+				random.seed()
+				x_rand = random.randint(0,self.num_cols-1)
+				y_rand = random.randint(0,self.num_rows-1)
+				coord = (x_rand,y_rand)
+				self.hard_to_traverse_regions.append(coord)
+
+			# iterate over the regions and make a random 50% of the
+			# cells in the region be partially blocked. The size of a
+			# region is the 31x31 cells centered at that point (15 away
+			# in all directions from the center)
+			region_radius = 5
+			region_circum = region_radius*2
+
+			for region_center in self.hard_to_traverse_regions:
+
+				region_center_x = region_center[0]
+				region_center_y = region_center[1]
+
+				# top left corner coordinates...
+				region_start_x = region_center_x - region_radius
+				region_start_y = region_center_y - region_radius
+
+				# iterate over every cell in range and select with 50%
+				# probability to mark it as partially blocked
+				for y in range(region_start_y,region_start_y+region_circum):
+					# check that the y coord is in the grid range
+					if y>=0 and y<self.num_rows:
+						for x in range(region_start_x,region_start_x+region_circum):
+							# check that the x coord is in the grid range
+							if x>=0 and x<self.num_cols:
+								if random.randint(0,1)==1:
+									self.blocked_cells.append([x,y])
+									self.blocked_cell_life.append(5)
+
+			f = open("grid","w")
+			for coord,health in zip(self.blocked_cells,self.blocked_cell_life):
+				line = str(coord[0])+","+str(coord[1])+" "+str(health)+"\n"
+				f.write(line)
+			f.write("end")
+			f.close()
+		else:
+			f = open("grid","r")
+			lines = f.read().split("\n")
+			for line in lines:
+				if line.find("end")!=-1: break
+				items = line.split(" ")
+				x,y = items[0].split(",")
+				x = int(x)
+				y = int(y)
+				health = int(items[1])
+				self.blocked_cells.append([x,y])
+				self.blocked_cell_life.append(health)
+
+		self.gem_locations = []
+		num_gems = 5
+		while len(self.gem_locations)<num_gems:
+			idx = random.randint(0,len(self.blocked_cells))
+			if self.blocked_cell_life[idx]==10:
+				self.gem_locations.append(self.blocked_cells[idx])
 
 	def init_ui(self):
 		# initialize ui elements
 		self.worker_threads = []
+		self.gem_locations = None
 		self.grid_line_color = [0,0,0]
 		self.free_color = [255,255,255]
 		self.occupied_color = [0,128,255]
 		self.blocked_cell_color = [0,0,0]
+		self.gem_color = [102,51,153]
 		self.bullet_color = [255,0,0]
 		self.last_direction = "right"
 		self.bullet_direction = None
@@ -171,18 +254,30 @@ class eight_neighbor_grid(QWidget):
 		grid_width = self.horizontal_step*self.num_cols
 
 		qp.setBrush(QColor(self.free_color[0],self.free_color[1],self.free_color[2]))
-		qp.setPen(QPen(QColor(self.grid_line_color[0],self.grid_line_color[1],self.grid_line_color[2]),1,Qt.SolidLine))
+		qp.setPen(Qt.NoPen)
 
 		for y in range(self.num_rows):
 			for x in range(self.num_cols):
 				cell_state = self.get_cell_state(x,y)
+
+				if [x,y] in self.gem_locations:
+					qp.setBrush(QColor(self.gem_color[0],self.gem_color[1],self.gem_color[2]))
 
 				if cell_state==1:
 					qp.setBrush(QColor(self.occupied_color[0],self.occupied_color[1],self.occupied_color[2]))
 					self.current_location = [x,y]
 
 				if [x,y] in self.blocked_cells:
-					qp.setBrush(QColor(self.blocked_cell_color[0],self.blocked_cell_color[1],self.blocked_cell_color[2]))
+					cell_health = self.blocked_cell_life[self.blocked_cells.index([x,y])]
+
+					if cell_health>9:
+						qp.setBrush(QColor(self.blocked_cell_color[0],self.blocked_cell_color[1],self.blocked_cell_color[2]))
+					elif cell_health>5:
+						qp.setBrush(QColor(130,130,130))
+					elif cell_health>2:
+						qp.setBrush(QColor(200,200,200))
+					else:
+						qp.setBrush(QColor(255,255,255))
 
 				x_start = x*self.horizontal_step
 				y_start = y*self.vertical_step
@@ -190,8 +285,13 @@ class eight_neighbor_grid(QWidget):
 
 				self.cells[y][x].render_coordinate = [x_start,y_start]
 
-				if cell_state==1 or [x,y] in self.blocked_cells:
+				if cell_state==1 or [x,y] in self.blocked_cells or [x,y] in self.gem_locations:
 					qp.setBrush(QColor(self.free_color[0],self.free_color[1],self.free_color[2]))
+
+		if [self.current_location[0],self.current_location[1]] in self.gem_locations:
+			idx = self.gem_locations.index([self.current_location[0],self.current_location[1]])
+			del self.gem_locations[idx]
+			self.user_has_gem += 1
 
 		if self.opponent_location!=None:
 			x = self.opponent_location[0]
@@ -224,6 +324,11 @@ class eight_neighbor_grid(QWidget):
 
 				if [t.bullet_loc[0],t.bullet_loc[1]] in self.blocked_cells:
 					t.exiting = True
+					idx = self.blocked_cells.index([t.bullet_loc[0],t.bullet_loc[1]])
+					self.blocked_cell_life[idx]+=-1
+					if self.blocked_cell_life[idx]<=0:
+						del self.blocked_cells[idx]
+						del self.blocked_cell_life[idx]
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
@@ -283,19 +388,45 @@ class eight_neighbor_grid(QWidget):
 		for t in self.worker_threads:
 			if t.job==None: del self.worker_threads[self.worker_threads.index(t)]
 
+	def get_opposite_direction(self,direction):
+		if direction=="left": return "right"
+		if direction=="right": return "left"
+		if direction=="up": return "down"
+		if direction=="down": return "up"
+		return "none"
+
 	def action(self,what="shoot"):
 		if what=="shoot":
+			bullet_start = self.get_cell_attrib(1) if self.current_location==None else self.current_location
+			bullet_direction = self.last_direction
+
 			t = grid_worker(self)
 			t.job = "bullet"
 			t.player = "me"
-			t.bullet_direction = self.last_direction
-			t.bullet_start = self.get_cell_attrib(1) if self.current_location==None else self.current_location
+			t.bullet_direction = bullet_direction
+			t.bullet_start = bullet_start
 			t.num_cols = self.num_cols
 			t.num_rows = self.num_rows
 			self.worker_threads.append(t)
 			t.start()
-			self.clean_worker_threads()
-			return [t.bullet_direction,t.bullet_start]
+
+			if self.user_has_gem>0:
+				t2 = grid_worker(self)
+				t2.job = "bullet"
+				t2.player = "me"
+				t2.bullet_direction = self.get_opposite_direction(bullet_direction)
+				t2.bullet_start = bullet_start
+				t2.num_cols = self.num_cols
+				t2.num_rows = self.num_rows
+				t2.start()
+				self.worker_threads.append(t2)
+
+			self.clean_worker_threads()			
+
+			if self.user_has_gem>1:
+				return [t.bullet_direction,t.bullet_start,t2.bullet_direction]
+			else:
+				return [t.bullet_direction,t.bullet_start,None]
 
 	def opponent_shoot(self,bullet_direction,start_x,start_y):
 		t = grid_worker(self)
@@ -461,6 +592,7 @@ class main_window(QWidget):
 			self.sender_threads.append(sender2)
 			self.grid.setEnabled(True)
 
+			self.grid.init_blocked_cells()
 			self.grid.opponent_move(self.num_cols-1,self.num_rows-1)
 			return
 
@@ -482,6 +614,14 @@ class main_window(QWidget):
 			y = items[3].split(":")[1]
 			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
 			return
+
+		if items[0]=="shoot2":
+			bullet_direction = items[1]
+			bullet_direction2 = items[-1]
+			x = items[2].split(":")[1]
+			y = items[3].split(":")[1]
+			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
+			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
 
 		if items[0]=="move":
 			x = items[1].split(":")[1]
@@ -541,8 +681,11 @@ class main_window(QWidget):
 
 		if action!=None:
 			if action=="shoot": 
-				bullet_direction, bullet_start = self.grid.action(action)
-				message = "shoot|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
+				bullet_direction, bullet_start, o_bullet_direction = self.grid.action(action)
+				if o_bullet_direction==None:
+					message = "shoot|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
+				else:
+					message = "shoot2|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])+"|"+o_bullet_direction
 			else: 
 				new_location = self.grid.move(action)
 				message = "move|"+"x:"+str(new_location[0])+"|y:"+str(new_location[1])
@@ -571,6 +714,7 @@ class main_window(QWidget):
 		sender.is_done = False 
 		sender.start()
 		self.sender_threads.append(sender)
+		self.grid.init_blocked_cells()
 		self.grid.setEnabled(False)
 		self.grid.repaint()
 
