@@ -579,6 +579,7 @@ class receive_thread(QThread):
 		while True:
 			
 			(data, addr) = UDPSock.recvfrom(buf)
+			#print("Received: ",data)
 			self.emit(SIGNAL("got_message(QString)"), data)
 
 		UDPSock.close()
@@ -776,7 +777,7 @@ class main_window(QWidget):
 			x = items[2].split(":")[1]
 			y = items[3].split(":")[1]
 			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
-			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
+			self.grid.opponent_shoot(bullet_direction=bullet_direction2,start_x=x,start_y=y)
 			return
 
 		if items[0]=="shoot4":
@@ -865,7 +866,7 @@ class main_window(QWidget):
 		if action!=None:
 			if action=="shoot": 
 				bullet_direction, bullet_start, o_bullet_direction = self.grid.action(action)
-				if bullet_direction==None:
+				if bullet_direction==None and o_bullet_direction==None:
 					message = "shoot4|x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
 				elif o_bullet_direction==None:
 					message = "shoot|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
