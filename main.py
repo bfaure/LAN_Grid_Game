@@ -48,6 +48,7 @@ class grid_worker(QThread):
 
 			if self.bullet_direction=="left":
 				for i in range(0,cur_x):
+					if self.exiting: break
 					x_spot = cur_x-i
 					y_spot = cur_y
 					for i in range(increments_per_cell):
@@ -56,6 +57,7 @@ class grid_worker(QThread):
 
 			if self.bullet_direction=="right":
 				for i in range(cur_x,self.num_cols):
+					if self.exiting: break
 					x_spot = i
 					y_spot = cur_y
 					self.bullet_loc = [x_spot,y_spot]
@@ -65,6 +67,7 @@ class grid_worker(QThread):
 					
 			if self.bullet_direction=="up":
 				for i in range(0,cur_y):
+					if self.exiting: break
 					x_spot = cur_x 
 					y_spot = cur_y-i
 					self.bullet_loc = [x_spot,y_spot]
@@ -74,6 +77,7 @@ class grid_worker(QThread):
 
 			if self.bullet_direction=="down":
 				for i in range(cur_y,self.num_rows):
+					if self.exiting: break
 					x_spot = cur_x 
 					y_spot = i
 					for i in range(increments_per_cell):
@@ -121,13 +125,17 @@ class eight_neighbor_grid(QWidget):
 				row.append(cur_cell)
 			self.cells.append(row)
 
+		self.blocked_cells = [	[0,5],[1,6],[7,20],[9,14],[9,15],[9,16],
+								[25,15],[20,16],[15,8],[30,15],[32,21],
+								[22,22],[23,8],[24,8],[23,8],[24,7]]
+
 	def init_ui(self):
 		# initialize ui elements
 		self.worker_threads = []
-		#self.connect(self,SIGNAL("call_worker()"),self.worker_thread.run)
 		self.grid_line_color = [0,0,0]
 		self.free_color = [255,255,255]
 		self.occupied_color = [0,128,255]
+		self.blocked_cell_color = [0,0,0]
 		self.bullet_color = [255,0,0]
 		self.last_direction = "right"
 		self.bullet_direction = None
@@ -173,13 +181,16 @@ class eight_neighbor_grid(QWidget):
 					qp.setBrush(QColor(self.occupied_color[0],self.occupied_color[1],self.occupied_color[2]))
 					self.current_location = [x,y]
 
+				if [x,y] in self.blocked_cells:
+					qp.setBrush(QColor(self.blocked_cell_color[0],self.blocked_cell_color[1],self.blocked_cell_color[2]))
+
 				x_start = x*self.horizontal_step
 				y_start = y*self.vertical_step
 				qp.drawRect(x_start,y_start,self.horizontal_step,self.vertical_step)
 
 				self.cells[y][x].render_coordinate = [x_start,y_start]
 
-				if cell_state==1:
+				if cell_state==1 or [x,y] in self.blocked_cells:
 					qp.setBrush(QColor(self.free_color[0],self.free_color[1],self.free_color[2]))
 
 		if self.opponent_location!=None:
@@ -210,6 +221,9 @@ class eight_neighbor_grid(QWidget):
 				if self.current_location!=None:
 					if t.bullet_loc[0]==self.current_location[0] and t.bullet_loc[1]==self.current_location[1] and t.player=="opponent":
 						self.game_over = True 
+
+				if [t.bullet_loc[0],t.bullet_loc[1]] in self.blocked_cells:
+					t.exiting = True
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
@@ -254,6 +268,9 @@ class eight_neighbor_grid(QWidget):
 		if x==-1 or x==self.num_cols: 
 			return [cur_x,cur_y]
 		if y==-1 or y==self.num_rows: 
+			return [cur_x,cur_y]
+
+		if [x,y] in self.blocked_cells:
 			return [cur_x,cur_y]
 
 		self.cells[cur_y][cur_x].set_free()
@@ -356,7 +373,6 @@ class receive_thread(QThread):
 			
 			(data, addr) = UDPSock.recvfrom(buf)
 			self.emit(SIGNAL("got_message(QString)"), data)
-			#print("Received: ",data)
 
 		UDPSock.close()
 
