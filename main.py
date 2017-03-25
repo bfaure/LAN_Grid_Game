@@ -47,7 +47,7 @@ class grid_worker(QThread):
 			time_per_increment = float(float(time_per_cell)/float(increments_per_cell))
 
 			if self.bullet_direction=="left":
-				for i in range(0,cur_x):
+				for i in range(-1,cur_x):
 					if self.exiting: break
 					x_spot = cur_x-i
 					y_spot = cur_y
@@ -56,7 +56,7 @@ class grid_worker(QThread):
 						sleep(time_per_increment)
 
 			if self.bullet_direction=="right":
-				for i in range(cur_x,self.num_cols):
+				for i in range(cur_x,self.num_cols+1):
 					if self.exiting: break
 					x_spot = i
 					y_spot = cur_y
@@ -66,7 +66,7 @@ class grid_worker(QThread):
 						sleep(time_per_increment)
 					
 			if self.bullet_direction=="up":
-				for i in range(0,cur_y):
+				for i in range(-1,cur_y):
 					if self.exiting: break
 					x_spot = cur_x 
 					y_spot = cur_y-i
@@ -76,7 +76,7 @@ class grid_worker(QThread):
 						sleep(time_per_increment)
 
 			if self.bullet_direction=="down":
-				for i in range(cur_y,self.num_rows):
+				for i in range(cur_y,self.num_rows+1):
 					if self.exiting: break
 					x_spot = cur_x 
 					y_spot = i
@@ -86,7 +86,23 @@ class grid_worker(QThread):
 
 			self.bullet_direction = None 
 			self.job = None 
-			self.update_grid.emit()
+			#self.update_grid.emit()
+
+		bot_sleep_time = 0.5
+		if self.job=="bot":
+			self.bot_loc = self.bot_start
+			directions = ["left","right","up","down"]
+			while True:
+				if self.exiting: break 
+				self.bot_dir = random.choice(directions)
+				for self.inc in range(10):
+					sleep(float(bot_sleep_time)/10.00)
+				if self.bot_dir=="left": self.bot_loc = [self.bot_loc[0]-1,self.bot_loc[1]]
+				if self.bot_dir=="right": self.bot_loc = [self.bot_loc[0]+1,self.bot_loc[1]]
+				if self.bot_dir=="up": self.bot_loc = [self.bot_loc[0],self.bot_loc[1]-1]
+				if self.bot_dir=="down": self.bot_loc = [self.bot_loc[0],self.bot_loc[1]+1]
+
+			self.job = None
 
 class frame_manager(QThread):
 	update_grid = pyqtSignal()
@@ -115,6 +131,7 @@ class eight_neighbor_grid(QWidget):
 		self.num_rows = num_rows # height of the board
 		self.pyqt_app = pyqt_app # allows this class to call parent functions
 		self.init_ui() # initialize a bunch of class instance variables
+		self.bots = []
 
 	def init_cells(self):
 		self.cells = []
@@ -156,10 +173,6 @@ class eight_neighbor_grid(QWidget):
 				coord = (x_rand,y_rand)
 				self.hard_to_traverse_regions.append(coord)
 
-			# iterate over the regions and make a random 50% of the
-			# cells in the region be partially blocked. The size of a
-			# region is the 31x31 cells centered at that point (15 away
-			# in all directions from the center)
 			region_radius = 5
 			region_circum = region_radius*2
 
@@ -206,20 +219,43 @@ class eight_neighbor_grid(QWidget):
 		self.gem_locations = []
 		num_gems = 5
 		while len(self.gem_locations)<num_gems:
-			idx = random.randint(0,len(self.blocked_cells))
+			idx = random.randint(0,len(self.blocked_cells)-1)
 			if self.blocked_cell_life[idx]==10:
 				self.gem_locations.append(self.blocked_cells[idx])
+
+		for w in self.worker_threads:
+			if w.job=="bot":
+				w.exiting=True
+				del self.worker_threads[self.worker_threads.index(w)]
+
+		num_bots = 5
+		bots = 0
+
+		while bots<num_bots:
+			new_bot = grid_worker(self)
+			new_bot.job = "bot"
+			bots+=1
+			while True:
+				x_start = random.randint(0,self.num_cols-1)
+				y_start = random.randint(0,self.num_rows-1)
+				if (x_start==0 and y_start==0) or (x_start==self.num_cols-1 and y_start==self.num_rows-1):
+					continue
+				break 
+			new_bot.bot_start = [x_start,y_start]
+			new_bot.start()
+			self.worker_threads.append(new_bot)
 
 	def init_ui(self):
 		# initialize ui elements
 		self.worker_threads = []
 		self.gem_locations = None
 		self.grid_line_color = [0,0,0]
-		self.free_color = [255,255,255]
+		self.free_color = [46,139,87]#,255,255]
 		self.occupied_color = [0,128,255]
 		self.blocked_cell_color = [0,0,0]
 		self.gem_color = [102,51,153]
 		self.bullet_color = [255,0,0]
+		self.bot_color = [255,0,0]
 		self.last_direction = "right"
 		self.bullet_direction = None
 		self.current_location = None
@@ -306,7 +342,6 @@ class eight_neighbor_grid(QWidget):
 				try:
 					render_loc = self.cells[t.bullet_loc[1]][t.bullet_loc[0]].render_coordinate
 				except:
-					print("Bullet left arena")
 					continue
 
 				qp.setBrush(QColor(self.bullet_color[0],self.bullet_color[1],self.bullet_color[2]))
@@ -329,6 +364,20 @@ class eight_neighbor_grid(QWidget):
 					if self.blocked_cell_life[idx]<=0:
 						del self.blocked_cells[idx]
 						del self.blocked_cell_life[idx]
+
+			if t.job=="bot":
+				try:
+					render_loc = self.cells[t.bot_loc[1]][t.bot_loc[0]].render_coordinate
+				except:
+					continue
+
+				qp.setBrush(QColor(self.bot_color[0],self.bot_color[1],self.bot_color[2]))
+				move_m = 2
+
+				if t.bot_dir == "right": qp.drawEllipse(render_loc[0]+(t.inc*move_m),render_loc[1]+6,4,4)
+				if t.bot_dir == "left": qp.drawEllipse(render_loc[0]-(t.inc*move_m),render_loc[1]+6,4,4)
+				if t.bot_dir == "up": qp.drawEllipse(render_loc[0]+6,render_loc[1]-(t.inc*move_m),4,4)
+				if t.bot_dir == "down": qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.inc*move_m),4,4)
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
