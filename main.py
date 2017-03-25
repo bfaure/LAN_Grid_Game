@@ -327,7 +327,7 @@ class sender_thread(QThread):
 		return True
 
 	def send(self):
-		print("Sending: ",self.message)
+		#print("Sending: ",self.message)
 		self.UDPSock.sendto(str(self.message), self.addr)
 		self.UDPSock.close()
 		self.is_done = True
@@ -352,7 +352,7 @@ class receive_thread(QThread):
 			
 			(data, addr) = UDPSock.recvfrom(buf)
 			self.emit(SIGNAL("got_message(QString)"), data)
-			print("Received: ",data)
+			#print("Received: ",data)
 
 		UDPSock.close()
 
@@ -417,7 +417,13 @@ class main_window(QWidget):
 		items = update.split("|")
 
 		if items[0]=="restart":
-			self.grid.set_current_location("opposite")
+			x,y = self.grid.set_current_location("opposite")
+			sender = sender_thread()
+			sender.host = self.opponent_ip
+			sender.message = "move|x:"+str(x)+"|y:"+str(y)
+			sender.start()
+			sender.is_done=False
+			self.sender_threads.append(sender)
 			return
 
 		if items[0]=="new":
