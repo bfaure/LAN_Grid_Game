@@ -424,6 +424,7 @@ class main_window(QWidget):
 
 		if items[0]=="ready":
 			self.grid.setEnabled(True)
+			self.grid.opponent_location = [0,0]
 
 		if items[0]=="restart":
 			self.grid.setEnabled(False)
@@ -436,7 +437,7 @@ class main_window(QWidget):
 			sender.start()
 			self.sender_threads.append(sender)
 			'''
-			
+
 			sender2 = sender_thread()
 			sender2.host = self.opponent_ip
 			sender2.message = "ready| "
