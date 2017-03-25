@@ -94,6 +94,7 @@ class frame_manager(QThread):
 	def run(self):
 		refresh_period = 0.025
 		while True:
+			if self.stop: break
 			self.update_grid.emit()
 			sleep(refresh_period)
 
@@ -135,6 +136,7 @@ class eight_neighbor_grid(QWidget):
 		self.init_cells()
 
 		self.frame_updater = frame_manager(self)
+		self.frame_updater.stop=False
 		self.frame_updater.start()
 
 	def paintEvent(self,e):
@@ -174,7 +176,7 @@ class eight_neighbor_grid(QWidget):
 
 				if cell_state==1:
 					qp.setBrush(QColor(self.occupied_color[0],self.occupied_color[1],self.occupied_color[2]))
-					#self.current_location = [x,y]
+					self.current_location = [x,y]
 
 				x_start = x*self.horizontal_step
 				y_start = y*self.vertical_step
@@ -184,6 +186,14 @@ class eight_neighbor_grid(QWidget):
 
 				if cell_state==1:
 					qp.setBrush(QColor(self.free_color[0],self.free_color[1],self.free_color[2]))
+
+		if self.opponent_location!=None:
+			x = self.opponent_location[0]
+			y = self.opponent_location[1]
+			x_start = x*self.horizontal_step
+			y_start = y*self.horizontal_step
+			qp.setBrush(QColor(self.opponent_color[0],self.opponent_color[1],self.opponent_color[2]))
+			qp.drawRect(x_start,y_start,self.horizontal_step,self.vertical_step)
 
 		for t in self.worker_threads:
 			if t.job=="bullet":
@@ -205,16 +215,9 @@ class eight_neighbor_grid(QWidget):
 				if self.current_location!=None:
 					if t.bullet_loc[0]==self.current_location[0] and t.bullet_loc[1]==self.current_location[1]:
 						self.game_over = True 
+				if self.opponent_location!=None:
 					if t.bullet_loc[0]==self.opponent_location[0] and t.bullet_loc[1]==self.opponent_location[1]:
 						self.game_over = True 
-
-		if self.opponent_location!=None:
-			x = self.opponent_location[0]
-			y = self.opponent_location[1]
-			x_start = x*self.horizontal_step
-			y_start = y*self.horizontal_step
-			qp.setBrush(QColor(self.opponent_color[0],self.opponent_color[1],self.opponent_color[2]))
-			qp.drawRect(x_start,y_start,self.horizontal_step,self.vertical_step)
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
@@ -472,7 +475,11 @@ class main_window(QWidget):
 		self.opponent_ip = None
 
 	def quit(self):
+		self.grid.frame_updater.stop=True
 		sys.exit(1)
+
+	def closeEvent(self,e):
+		self.quit()
 
 	def start_character(self):
 		self.grid.get_start_cell()
@@ -510,7 +517,7 @@ class main_window(QWidget):
 	def game_over(self):
 		sender = sender_thread()
 		sender.host = self.opponent_ip
-		sender.message = "restart|"
+		sender.message = "restart| "
 		sender.start()
 		sender.is_done = False 
 		self.sender_threads.append(sender)
