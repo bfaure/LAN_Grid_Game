@@ -219,6 +219,7 @@ class eight_neighbor_grid(QWidget):
 
 	def init_blocked_cells(self):
 
+		self.user_health = 10
 		self.user_has_gem = 0
 		self.blocked_cells = []
 		self.blocked_cell_life = []
@@ -348,6 +349,7 @@ class eight_neighbor_grid(QWidget):
 		qp.end()
 
 		if self.game_over: 
+			self.user_health+=-1
 			self.game_over = False
 			self.end_game.emit()
 
@@ -464,6 +466,9 @@ class eight_neighbor_grid(QWidget):
 				if t.bot_dir == "left": qp.drawEllipse(render_loc[0]-(t.inc*move_m),render_loc[1]+6,4,4)
 				if t.bot_dir == "up": qp.drawEllipse(render_loc[0]+6,render_loc[1]-(t.inc*move_m),4,4)
 				if t.bot_dir == "down": qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.inc*move_m),4,4)
+
+				if self.current_location[0]==t.bot_loc[0] and self.current_location[1]==t.bot_loc[1]:
+					self.game_over = True
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
@@ -779,7 +784,15 @@ class main_window(QWidget):
 		self.init_ui()
 		self.start_character()
 
+	def set_health(self,health):
+		cur_ip = str(gethostbyname(gethostname()))
+		if self.connected:
+			self.setWindowTitle("Me: ("+cur_ip+") - Opponent: ("+self.opponent_ip+") - Health: "+str(health)+"/10")
+		else:
+			self.setWindowTitle("Me: ("+cur_ip+") - Not Connected - Health: "+str(health)+"/10")
+
 	def set_connected(self,connected):
+		self.connected = connected
 		cur_ip = str(gethostbyname(gethostname()))
 		if connected:
 			self.setWindowTitle("Me: ("+cur_ip+") - Opponent: ("+self.opponent_ip+")")
@@ -1011,18 +1024,23 @@ class main_window(QWidget):
 				del self.sender_threads[self.sender_threads.index(s)]
 
 	def game_over(self):
-		self.grid.set_current_location("opposite")
-		self.grid.opponent_move(0,0)
-		pyqt_app.processEvents()
-		sender = sender_thread()
-		sender.host = self.opponent_ip
-		sender.message = "restart| "
-		sender.is_done = False 
-		sender.start()
-		self.sender_threads.append(sender)
-		self.grid.init_blocked_cells()
-		self.grid.setEnabled(False)
-		self.grid.repaint()
+		user_health = self.grid.user_health
+		if user_health<=0:
+			self.grid.set_current_location("opposite")
+			pyqt_app.processEvents()
+			if self.opponent_ip!=None:
+				self.grid.opponent_move(0,0)
+				sender = sender_thread()
+				sender.host = self.opponent_ip
+				sender.message = "restart| "
+				sender.is_done = False 
+				sender.start()
+				self.sender_threads.append(sender)
+			self.grid.init_blocked_cells()
+			self.grid.setEnabled(False)
+			self.grid.repaint()
+		else:
+			self.set_health(user_health)
 
 def main():
 	global pyqt_app
