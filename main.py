@@ -365,6 +365,8 @@ class main_window(QWidget):
 	def __init__(self,parent=None):
 		super(main_window,self).__init__()
 		self.opponent_ip = None
+		self.num_cols = 35
+		self.num_rows = 25
 		self.set_connected(False)
 		self.init_ui()
 		self.start_character()
@@ -389,7 +391,7 @@ class main_window(QWidget):
 		self.min_height = 425
 
 		self.layout = QVBoxLayout(self)
-		self.grid = eight_neighbor_grid(parent=self)
+		self.grid = eight_neighbor_grid(num_cols=self.num_cols,num_rows=self.num_rows,parent=self)
 
 		if sys.platform in ["apple","Apple","darwin","Darwin"]:
 			self.min_height = 470
@@ -541,6 +543,7 @@ class main_window(QWidget):
 
 	def game_over(self):
 		self.grid.set_current_location("opposite")
+		self.grid.opponent_location = [0,0]
 		sender = sender_thread()
 		sender.host = self.opponent_ip
 		sender.message = "restart| "
@@ -548,6 +551,7 @@ class main_window(QWidget):
 		sender.start()
 		self.sender_threads.append(sender)
 		self.grid.setEnabled(False)
+		self.grid.repaint()
 
 def main():
 	global pyqt_app
