@@ -285,7 +285,7 @@ class eight_neighbor_grid(QWidget):
 					if self.cells[y][x].state()==1:
 						self.cells[y][x].set_free()
 		self.current_location = [self.num_cols-1,self.num_rows-1]
-		self.cells[self.num_cols-1][self.num_rows-1].set_occupied()
+		self.cells[self.num_rows-1][self.num_cols-1].set_occupied()
 		self.repaint()
 		return [self.num_cols-1,self.num_rows-1]
 
