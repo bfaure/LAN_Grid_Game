@@ -146,13 +146,6 @@ class eight_neighbor_grid(QWidget):
 		qp.end()
 
 		if self.game_over:
-
-			for y in range(self.num_rows):
-				for x in range(self.num_cols):
-					if self.cells[y][x].state()==1:
-						self.cells[y][x].set_free()
-			self.cells[0][0].set_occupied()
-			self.current_location = [0,0]
 			self.parent.game_over()
 			self.game_over = False
 
@@ -306,10 +299,19 @@ class eight_neighbor_grid(QWidget):
 				for x in range(self.num_cols):
 					if self.cells[y][x].state()==1:
 						self.cells[y][x].set_free()
-		self.current_location = [self.num_cols-1,self.num_rows-1]
-		self.cells[self.num_rows-1][self.num_cols-1].set_occupied()
-		self.repaint()
-		return [self.num_cols-1,self.num_rows-1]
+			self.current_location = [self.num_cols-1,self.num_rows-1]
+			self.cells[self.num_rows-1][self.num_cols-1].set_occupied()
+			self.repaint()
+			return [self.num_cols-1,self.num_rows-1]
+		if location_descriptor=="standard":
+			for y in range(self.num_rows):
+				for x in range(self.num_cols):
+					if self.cells[y][x].state()==1:
+						self.cells[y][x].set_free()
+			self.current_location = [0,0]
+			self.cells[0][0].set_occupied()
+			self.repaint()
+			return [0,0]
 
 class sender_thread(QThread):
 	def __init__(self):
@@ -417,7 +419,7 @@ class main_window(QWidget):
 		items = update.split("|")
 
 		if items[0]=="restart":
-			x,y = self.grid.set_current_location("opposite")
+			x,y = self.grid.set_current_location("standard")
 			sender = sender_thread()
 			sender.host = self.opponent_ip
 			sender.message = "move|x:"+str(x)+"|y:"+str(y)
@@ -522,6 +524,8 @@ class main_window(QWidget):
 				del self.sender_threads[self.sender_threads.index(s)]
 
 	def game_over(self):
+		self.grid.set_current_location("opposite")
+		
 		sender = sender_thread()
 		sender.host = self.opponent_ip
 		sender.message = "restart| "
