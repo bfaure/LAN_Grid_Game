@@ -80,7 +80,7 @@ class grid_worker(QThread):
 # UI element (widget) that represents the interface with the grid
 class eight_neighbor_grid(QWidget):
 
-	def __init__(self,num_cols=50,num_rows=50,pyqt_app=None):
+	def __init__(self,num_cols=35,num_rows=25,pyqt_app=None):
 		# constructor, pass the number of cols and rows
 		super(eight_neighbor_grid,self).__init__()
 		self.num_cols = num_cols # width of the board
@@ -329,14 +329,14 @@ class main_window(QWidget):
 		QObject.connect(self.receiver,SIGNAL("got_message(QString)"),self.receive_update)
 
 		self.min_width = 625
-		self.min_height = 625
+		self.min_height = 425
 
 		self.layout = QVBoxLayout(self)
 		self.grid = eight_neighbor_grid()
 
 		if sys.platform in ["apple","Apple","darwin","Darwin"]:
 			self.min_height = 700
-			self.min_width = 700
+			self.min_width = 500
 
 		if sys.platform in ["linux","linux32","win32"]: 
 			self.layout.addSpacing(25)
