@@ -556,11 +556,90 @@ class receive_thread(QThread):
 
 		UDPSock.close()
 
+class ip_window(QWidget):
+	got_ip = pyqtSignal()
+
+	def __init__(self,parent=None):
+		super(ip_window,self).__init__()
+		self.parent = parent
+		self.connect(self,SIGNAL("got_ip()"),self.parent.got_ip)
+		self.init_vars()
+		self.init_ui()
+
+	def init_vars(self):
+		self.full_ip = None 
+		self.ip1 = "192"
+		self.ip2 = "168"
+		self.ip3 = "1"
+		self.ip4 = ""
+
+	def init_ui(self):
+		self.setWindowTitle("IP Address Input")
+		self.layout = QVBoxLayout(self)
+		self.top_label = QLabel("Enter IP Address of other user:")
+		self.layout.addWidget(self.top_label)
+
+		ip_row = QHBoxLayout()
+
+		self.ip1_input = QLineEdit(self.ip1)
+		self.ip2_input = QLineEdit(self.ip2)
+		self.ip3_input = QLineEdit(self.ip3)
+		self.ip4_input = QLineEdit(self.ip4)
+
+		ip_row.addSpacing(15)
+		ip_row.addWidget(self.ip1_input)
+		ip_row.addWidget(QLabel("."))
+		ip_row.addWidget(self.ip2_input)
+		ip_row.addWidget(QLabel("."))
+		ip_row.addWidget(self.ip3_input)
+		ip_row.addWidget(QLabel("."))
+		ip_row.addWidget(self.ip4_input)
+		ip_row.addSpacing(15)
+
+		ok_cancel_row = QHBoxLayout()
+		ok_button = QPushButton("Ok")
+		cancel_button = QPushButton("Cancel")
+
+		ok_cancel_row.addStretch()
+		ok_cancel_row.addWidget(cancel_button)
+		ok_cancel_row.addWidget(ok_button)
+		ok_cancel_row.addStretch()
+
+		ok_button.clicked.connect(self.ok_selected)
+		cancel_button.clicked.connect(self.cancel_selected)
+
+		self.layout.addLayout(ip_row)
+		self.layout.addLayout(ok_cancel_row)
+		self.layout.addSpacing(20)
+
+		self.setFixedWidth(350)
+		self.setFixedHeight(150)
+
+	def keyPressEvent(self,e):
+		if e.key() in [Qt.Key_Return,Qt.Key_Enter]:
+			self.ok_selected()
+
+	def ok_selected(self):
+		self.ip1 = str(self.ip1_input.text())
+		self.ip2 = str(self.ip2_input.text())
+		self.ip3 = str(self.ip3_input.text())
+		self.ip4 = str(self.ip4_input.text())
+		self.full_ip = self.ip1+"."+self.ip2+"."+self.ip3+"."+self.ip4
+		self.got_ip.emit()
+
+	def cancel_selected(self):
+		self.full_ip = None
+		self.got_ip.emit()
+
+	def closeEvent(self,e):
+		self.cancel_selected()
+
 class main_window(QWidget):
 
 	def __init__(self,parent=None):
 		super(main_window,self).__init__()
 		self.opponent_ip = None
+		self.ip_dialog_window = ip_window(self)
 		self.num_cols = 35
 		self.num_rows = 25
 		self.set_connected(False)
@@ -606,7 +685,7 @@ class main_window(QWidget):
 		file_menu.addAction("Quit",self.quit,QKeySequence("Ctrl+Q"))
 
 		connection_menu = self.toolbar.addMenu("Connection")
-		connection_menu.addAction("Connect",self.connect)
+		connection_menu.addAction("Connect",self.connect,QKeySequence("Ctrl+C"))
 		connection_menu.addAction("Disconnect",self.disconnect)
 
 		self.setFixedWidth(self.min_width)
@@ -678,8 +757,23 @@ class main_window(QWidget):
 			self.grid.opponent_move(x,y)
 			return
 
+	def got_ip(self):
+		self.opponent_ip = self.ip_dialog_window.full_ip
+		self.ip_dialog_window.hide()
+		self.show()
+		if self.opponent_ip!=None:
+			self.grid.set_current_location("standard")
+			sender = sender_thread()
+			sender.host = self.opponent_ip
+			sender.message = "new|"+str(gethostbyname(gethostname()))
+			sender.is_done = False 
+			sender.start()
+			self.sender_threads.append(sender)
+			self.set_connected(True)
+
 	def connect(self,opp_ip=None):
 		if opp_ip==None:
+			'''
 			while True:
 				resp,ok = QInputDialog.getText(self,"Connection","Enter IP (192.168.1.x): ")
 				if not ok: return 
@@ -692,6 +786,10 @@ class main_window(QWidget):
 						except:
 							continue 
 					break
+			'''
+			self.hide()
+			self.ip_dialog_window.show()
+			return
 		else:
 			resp = opp_ip
 
