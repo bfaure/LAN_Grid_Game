@@ -100,11 +100,13 @@ class frame_manager(QThread):
 
 # UI element (widget) that represents the interface with the grid
 class eight_neighbor_grid(QWidget):
+	game_over = pyqtSignal()
 
 	def __init__(self,num_cols=35,num_rows=25,pyqt_app=None,parent=None):
 		# constructor, pass the number of cols and rows
 		super(eight_neighbor_grid,self).__init__()
 		self.parent	  = parent
+		self.connect(self,SIGNAL("game_over()"),parent.game_over)
 		self.num_cols = num_cols # width of the board
 		self.num_rows = num_rows # height of the board
 		self.pyqt_app = pyqt_app # allows this class to call parent functions
@@ -145,9 +147,9 @@ class eight_neighbor_grid(QWidget):
 		self.drawWidget(qp)
 		qp.end()
 
-		if self.game_over:
-			self.parent.game_over()
+		if self.game_over: 
 			self.game_over = False
+			self.game_over.emit()
 
 	def drawWidget(self,qp):
 		size = self.size()
