@@ -14,3 +14,9 @@ Run `python main.py` to open UI. Click on `Connect` menu option under `Connectio
 ## Dependencies
 *  `Python 2.7`
 * `PyQt4`
+
+# Binaries
+Download the entire folder. For Windows, double-click the main.exe file. For Mac, either double-click or open terminal, navigate to the downloaded folder, and run `./main`.
+
+[Windows](https://drive.google.com/open?id=0BxJe_Ggl7BIgMUpEZkdwUjRlYVk)
+[Mac](https://drive.google.com/open?id=0BxJe_Ggl7BIgMktrOGhRY0Z5MzA)
