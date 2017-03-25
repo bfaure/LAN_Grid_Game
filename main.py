@@ -257,6 +257,8 @@ class eight_neighbor_grid(QWidget):
 						self.cells[y][x].set_free()
 		self.current_location = [self.num_cols-1,self.num_rows-1]
 		self.cells[self.num_cols-1][self.num_rows-1].set_occupied()
+		self.repaint()
+		return [self.num_cols-1,self.num_rows-1]
 
 class sender_thread(QThread):
 	def __init__(self):
@@ -363,7 +365,13 @@ class main_window(QWidget):
 
 		if items[0]=="new":
 			self.connect(opp_ip=items[1])
-			self.grid.set_current_location("opposite")
+			x,y = self.grid.set_current_location("opposite")
+			sender = sender_thread()
+			sender.host = self.opponent_ip
+			sender.message = "move|x:"+str(x)+"|y:"+str(y)
+			sender.start()
+			sender.is_done=False
+			self.sender_threads.append(sender)
 			return
 
 		if items[0]=="shoot":
