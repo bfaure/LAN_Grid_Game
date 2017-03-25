@@ -200,9 +200,13 @@ class eight_neighbor_grid(QWidget):
 
 				move_m = 2
 
-				if t.bullet_direction in ["left","right"]:
+				if t.bullet_direction == "right":
 					qp.drawEllipse(render_loc[0]+(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
-				else:
+				if t.bullet_direction == "left":
+					qp.drawEllipse(render_loc[0]-(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
+				if t.bullet_direction == "up":
+					qp.drawEllipse(render_loc[0]+6,render_loc[1]-(t.bullet_loc[2]*move_m),4,4)
+				if t.bullet_direction in ["down"]:
 					qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.bullet_loc[2]*move_m),4,4)
 
 				if self.current_location!=None:
@@ -525,7 +529,7 @@ class main_window(QWidget):
 
 	def game_over(self):
 		self.grid.set_current_location("opposite")
-		
+
 		sender = sender_thread()
 		sender.host = self.opponent_ip
 		sender.message = "restart| "
