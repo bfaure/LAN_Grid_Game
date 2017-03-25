@@ -335,8 +335,8 @@ class main_window(QWidget):
 		self.grid = eight_neighbor_grid()
 
 		if sys.platform in ["apple","Apple","darwin","Darwin"]:
-			self.min_height = 700
-			self.min_width = 500
+			self.min_height = 470
+			self.min_width = 675
 
 		if sys.platform in ["linux","linux32","win32"]: 
 			self.layout.addSpacing(25)
