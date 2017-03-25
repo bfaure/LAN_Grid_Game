@@ -100,9 +100,10 @@ class frame_manager(QThread):
 # UI element (widget) that represents the interface with the grid
 class eight_neighbor_grid(QWidget):
 
-	def __init__(self,num_cols=35,num_rows=25,pyqt_app=None):
+	def __init__(self,num_cols=35,num_rows=25,pyqt_app=None,parent=None):
 		# constructor, pass the number of cols and rows
 		super(eight_neighbor_grid,self).__init__()
+		self.parent	  = parent
 		self.num_cols = num_cols # width of the board
 		self.num_rows = num_rows # height of the board
 		self.pyqt_app = pyqt_app # allows this class to call parent functions
@@ -130,6 +131,7 @@ class eight_neighbor_grid(QWidget):
 		self.current_location = None
 		self.opponent_location = None
 		self.opponent_color = [128,255,0]
+		self.game_over = False
 		self.init_cells()
 
 		self.frame_updater = frame_manager(self)
@@ -140,6 +142,10 @@ class eight_neighbor_grid(QWidget):
 		qp.begin(self)
 		self.drawWidget(qp)
 		qp.end()
+
+		if self.game_over:
+			self.parent.game_over()
+			self.game_over = False
 
 	def drawWidget(self,qp):
 		size = self.size()
@@ -161,6 +167,7 @@ class eight_neighbor_grid(QWidget):
 
 				if cell_state==1:
 					qp.setBrush(QColor(self.occupied_color[0],self.occupied_color[1],self.occupied_color[2]))
+					self.current_location = [x,y]
 
 				x_start = x*self.horizontal_step
 				y_start = y*self.vertical_step
@@ -187,6 +194,11 @@ class eight_neighbor_grid(QWidget):
 					qp.drawEllipse(render_loc[0]+(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
 				else:
 					qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.bullet_loc[2]*move_m),4,4)
+
+				if self.current_location!=None and self.opponent_location!=None:
+					if t.bullet_loc[0] in [self.current_location[0],self.opponent_location[0]]:
+						if t.bullet_loc[1] in [self.current_location[1],self.opponent_location[1]]:
+							self.game_over = True
 
 		if self.opponent_location!=None:
 			x = self.opponent_location[0]
@@ -392,6 +404,10 @@ class main_window(QWidget):
 
 		items = update.split("|")
 
+		if items[0]=="restart":
+			self.grid.set_current_location("opposite")
+			return
+
 		if items[0]=="new":
 			self.connect(opp_ip=items[1])
 			x,y = self.grid.set_current_location("opposite")
@@ -482,6 +498,14 @@ class main_window(QWidget):
 		for s in self.sender_threads:
 			if s.is_done:
 				del self.sender_threads[self.sender_threads.index(s)]
+
+	def game_over(self):
+		sender = sender_thread()
+		sender.host = self.opponent_ip
+		sender.message = "restart|"
+		sender.start()
+		sender.is_done = False 
+		self.sender_threads.append(sender)
 
 def main():
 	global pyqt_app
