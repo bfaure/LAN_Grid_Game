@@ -424,7 +424,7 @@ class main_window(QWidget):
 
 		if items[0]=="ready":
 			self.grid.setEnabled(True)
-			self.grid.opponent_location = [0,0]
+			self.grid.opponent_move(0,0)
 
 		if items[0]=="restart":
 			self.grid.setEnabled(False)
