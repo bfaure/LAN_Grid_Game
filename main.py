@@ -40,42 +40,62 @@ class grid_worker(QThread):
 		self.job = None 
 
 	def run(self):
-		sleep_time = 0.1
+		time_per_cell = 0.1
 		if self.job=="bullet":
 			cur_x,cur_y = self.bullet_start
+			increments_per_cell = 8
+			time_per_increment = float(float(time_per_cell)/float(increments_per_cell))
 
 			if self.bullet_direction=="left":
 				for i in range(0,cur_x):
 					x_spot = cur_x-i
 					y_spot = cur_y
-					self.bullet_loc = [x_spot,y_spot]
-					self.update_grid.emit()
-					sleep(sleep_time)
+					for i in range(increments_per_cell):
+						self.bullet_loc = [x_spot,y_spot,i]
+						sleep(time_per_increment)
+
 			if self.bullet_direction=="right":
 				for i in range(cur_x,self.num_cols):
 					x_spot = i
 					y_spot = cur_y
 					self.bullet_loc = [x_spot,y_spot]
-					self.update_grid.emit()
-					sleep(sleep_time)
+					for i in range(increments_per_cell):
+						self.bullet_loc = [x_spot,y_spot,i]
+						sleep(time_per_increment)
+					
 			if self.bullet_direction=="up":
 				for i in range(0,cur_y):
 					x_spot = cur_x 
 					y_spot = cur_y-i
 					self.bullet_loc = [x_spot,y_spot]
-					self.update_grid.emit()
-					sleep(sleep_time)
+					for i in range(increments_per_cell):
+						self.bullet_loc = [x_spot,y_spot,i]
+						sleep(time_per_increment)
+
 			if self.bullet_direction=="down":
 				for i in range(cur_y,self.num_rows):
 					x_spot = cur_x 
 					y_spot = i
-					self.bullet_loc = [x_spot,y_spot]
-					self.update_grid.emit()
-					sleep(sleep_time)
+					for i in range(increments_per_cell):
+						self.bullet_loc = [x_spot,y_spot,i]
+						sleep(time_per_increment)
 
 			self.bullet_direction = None 
 			self.job = None 
 			self.update_grid.emit()
+
+class frame_manager(QThread):
+	update_grid = pyqtSignal()
+
+	def __init__(self,parent=None):
+		QThread.__init__(self,parent)
+		self.connect(self,SIGNAL("update_grid()"),parent.repaint)
+
+	def run(self):
+		refresh_period = 0.025
+		while True:
+			self.update_grid.emit()
+			sleep(refresh_period)
 
 # UI element (widget) that represents the interface with the grid
 class eight_neighbor_grid(QWidget):
@@ -111,6 +131,9 @@ class eight_neighbor_grid(QWidget):
 		self.opponent_location = None
 		self.opponent_color = [128,255,0]
 		self.init_cells()
+
+		self.frame_updater = frame_manager(self)
+		self.frame_updater.start()
 
 	def paintEvent(self,e):
 		qp = QPainter()
@@ -157,7 +180,13 @@ class eight_neighbor_grid(QWidget):
 					continue
 
 				qp.setBrush(QColor(self.bullet_color[0],self.bullet_color[1],self.bullet_color[2]))
-				qp.drawEllipse(render_loc[0]+5,render_loc[1]+5,4,4)
+
+				move_m = 2
+
+				if t.bullet_direction in ["left","right"]:
+					qp.drawEllipse(render_loc[0]+(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
+				else:
+					qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.bullet_loc[2]*move_m),4,4)
 
 		if self.opponent_location!=None:
 			x = self.opponent_location[0]
