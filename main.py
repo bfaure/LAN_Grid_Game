@@ -92,7 +92,7 @@ class frame_manager(QThread):
 		self.connect(self,SIGNAL("update_grid()"),parent.repaint)
 
 	def run(self):
-		refresh_period = 0.025
+		refresh_period = 0.02
 		while True:
 			if self.stop: break
 			self.update_grid.emit()
@@ -191,7 +191,7 @@ class eight_neighbor_grid(QWidget):
 			x = self.opponent_location[0]
 			y = self.opponent_location[1]
 			x_start = x*self.horizontal_step
-			y_start = y*self.horizontal_step
+			y_start = y*self.vertical_step
 			qp.setBrush(QColor(self.opponent_color[0],self.opponent_color[1],self.opponent_color[2]))
 			qp.drawRect(x_start,y_start,self.horizontal_step,self.vertical_step)
 
@@ -330,6 +330,7 @@ class sender_thread(QThread):
 		return True
 
 	def send(self):
+		print("Sending: ",self.message)
 		self.UDPSock.sendto(str(self.message), self.addr)
 		self.UDPSock.close()
 		self.is_done = True
@@ -354,6 +355,7 @@ class receive_thread(QThread):
 			
 			(data, addr) = UDPSock.recvfrom(buf)
 			self.emit(SIGNAL("got_message(QString)"), data)
+			print("Received: ",data)
 
 		UDPSock.close()
 
