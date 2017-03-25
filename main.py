@@ -42,6 +42,7 @@ class grid_worker(QThread):
 	def run(self):
 		time_per_cell = 0.05
 		if self.job=="bullet":
+			self.bullet_loc = None
 			cur_x,cur_y = self.bullet_start
 			increments_per_cell = 8
 			time_per_increment = float(float(time_per_cell)/float(increments_per_cell))
@@ -51,8 +52,8 @@ class grid_worker(QThread):
 					if self.exiting: break
 					x_spot = cur_x-i
 					y_spot = cur_y
-					for i in range(increments_per_cell):
-						self.bullet_loc = [x_spot,y_spot,i]
+					for j in range(increments_per_cell):
+						self.bullet_loc = [x_spot,y_spot,j]
 						sleep(time_per_increment)
 
 			if self.bullet_direction=="right":
@@ -60,9 +61,8 @@ class grid_worker(QThread):
 					if self.exiting: break
 					x_spot = i
 					y_spot = cur_y
-					self.bullet_loc = [x_spot,y_spot]
-					for i in range(increments_per_cell):
-						self.bullet_loc = [x_spot,y_spot,i]
+					for j in range(increments_per_cell):
+						self.bullet_loc = [x_spot,y_spot,j]
 						sleep(time_per_increment)
 					
 			if self.bullet_direction=="up":
@@ -70,9 +70,8 @@ class grid_worker(QThread):
 					if self.exiting: break
 					x_spot = cur_x 
 					y_spot = cur_y-i
-					self.bullet_loc = [x_spot,y_spot]
-					for i in range(increments_per_cell):
-						self.bullet_loc = [x_spot,y_spot,i]
+					for j in range(increments_per_cell):
+						self.bullet_loc = [x_spot,y_spot,j]
 						sleep(time_per_increment)
 
 			if self.bullet_direction=="down":
@@ -80,9 +79,83 @@ class grid_worker(QThread):
 					if self.exiting: break
 					x_spot = cur_x 
 					y_spot = i
-					for i in range(increments_per_cell):
-						self.bullet_loc = [x_spot,y_spot,i]
+					for j in range(increments_per_cell):
+						self.bullet_loc = [x_spot,y_spot,j]
 						sleep(time_per_increment)
+
+			if self.bullet_direction=="up_left":
+				y_span = cur_y 
+				x_span = cur_x 
+				if y_span>x_span:
+					for i in range(-1,cur_y):
+						y_spot = cur_y-i 
+						x_spot = cur_x-i
+						for j in range(increments_per_cell):
+							self.bullet_loc = [x_spot,y_spot,j]
+							sleep(time_per_increment)
+				else:
+					for i in range(-1,cur_x):
+						y_spot = cur_y-i 
+						x_spot = cur_x-i
+						for j in range(increments_per_cell):
+							self.bullet_loc = [x_spot,y_spot,j]
+							sleep(time_per_increment)
+
+			if self.bullet_direction=="up_right":
+				y_span = cur_y 
+				x_span = self.num_cols-cur_x
+				if y_span>x_span:
+					for i in range(-1,cur_y):
+						y_spot = cur_y-i
+						x_spot = cur_x+i
+						for j in range(increments_per_cell):
+							self.bullet_loc = [x_spot,y_spot,j]
+							sleep(time_per_increment)
+				else:
+					for i in range(cur_x,self.num_cols+1):
+						y_spot = cur_y-i+cur_x 
+						x_spot = i 
+						for j in range(increments_per_cell):
+							self.bullet_loc = [x_spot,y_spot,j]
+							sleep(time_per_increment)
+
+			if self.bullet_direction=="down_left":
+				y_span = self.num_rows-cur_y 
+				x_span = cur_x 
+				if y_span>x_span:
+					for i in range(cur_y,self.num_rows+1):
+						y_spot = i 
+						x_spot = cur_x-i+cur_y 
+						for j in range(increments_per_cell):
+							self.bullet_loc = [x_spot,y_spot,j]
+							sleep(time_per_increment)
+
+				else:
+					for i in range(-1,cur_x):
+						y_spot = cur_y+i 
+						x_spot = cur_x-i 
+						for j in range(increments_per_cell):
+							self.bullet_loc = [x_spot,y_spot,j]
+							sleep(time_per_increment)
+
+			if self.bullet_direction=="down_right":
+				y_span = self.num_rows-cur_y 
+				x_span = self.num_cols-cur_x 
+				if y_span>x_span:
+					for i in range(cur_y,self.num_rows+1):
+						y_spot = i 
+						x_spot = cur_x+i-cur_y 
+						for j in range(increments_per_cell):
+							self.bullet_loc = [x_spot,y_spot,j]
+							sleep(time_per_increment)
+
+				else:
+					for i in range(cur_x,self.num_cols+1):
+						y_spot = cur_y+i-cur_x 
+						x_spot = i 
+						for j in range(increments_per_cell):
+							self.bullet_loc = [x_spot,y_spot,j]
+							sleep(time_per_increment)
 
 			self.bullet_direction = None 
 			self.job = None 
@@ -228,7 +301,7 @@ class eight_neighbor_grid(QWidget):
 				w.exiting=True
 				del self.worker_threads[self.worker_threads.index(w)]
 
-		num_bots = 5
+		num_bots = 7
 		bots = 0
 
 		while bots<num_bots:
@@ -346,14 +419,25 @@ class eight_neighbor_grid(QWidget):
 				except:
 					continue
 
+				if t.bullet_loc==None: continue 
+
 				qp.setBrush(QColor(self.bullet_color[0],self.bullet_color[1],self.bullet_color[2]))
 
 				move_m = 2
+				x_spot = render_loc[0]
+				y_spot = render_loc[1]
+				offset = t.bullet_loc[2]
+				full_offset = move_m*offset
 
-				if t.bullet_direction == "right": qp.drawEllipse(render_loc[0]+(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
-				if t.bullet_direction == "left": qp.drawEllipse(render_loc[0]-(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
-				if t.bullet_direction == "up": qp.drawEllipse(render_loc[0]+6,render_loc[1]-(t.bullet_loc[2]*move_m),4,4)
-				if t.bullet_direction in ["down"]: qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.bullet_loc[2]*move_m),4,4)
+				if t.bullet_direction == "right": qp.drawEllipse(x_spot+full_offset,y_spot+6,4,4)
+				if t.bullet_direction == "left": qp.drawEllipse(x_spot-full_offset,y_spot+6,4,4)
+				if t.bullet_direction == "up": qp.drawEllipse(x_spot+6,y_spot-full_offset,4,4)
+				if t.bullet_direction == "down": qp.drawEllipse(x_spot+6,y_spot+full_offset,4,4)
+
+				if t.bullet_direction == "up_left": qp.drawEllipse(x_spot-(full_offset),y_spot-(full_offset),4,4)
+				if t.bullet_direction == "up_right": qp.drawEllipse(x_spot+(full_offset),y_spot-(full_offset),4,4)
+				if t.bullet_direction == "down_left": qp.drawEllipse(x_spot-(full_offset),y_spot+(full_offset),4,4)
+				if t.bullet_direction == "down_right": qp.drawEllipse(x_spot+(full_offset),y_spot+(full_offset),4,4)
 
 				if self.current_location!=None:
 					if t.bullet_loc[0]==self.current_location[0] and t.bullet_loc[1]==self.current_location[1] and t.player=="opponent":
@@ -456,6 +540,7 @@ class eight_neighbor_grid(QWidget):
 			t.player = "me"
 			t.bullet_direction = bullet_direction
 			t.bullet_start = bullet_start
+			t.bullet_loc = None
 			t.num_cols = self.num_cols
 			t.num_rows = self.num_rows
 			self.worker_threads.append(t)
@@ -463,6 +548,7 @@ class eight_neighbor_grid(QWidget):
 
 			if self.user_has_gem>0:
 				t2 = grid_worker(self)
+				t2.bullet_loc = None 
 				t2.job = "bullet"
 				t2.player = "me"
 				t2.bullet_direction = self.get_opposite_direction(bullet_direction)
@@ -477,6 +563,7 @@ class eight_neighbor_grid(QWidget):
 				else: perp_bullet_direction = "left"
 				t3 = grid_worker(self)
 				t3.job = "bullet"
+				t3.bullet_loc = None
 				t3.player = "me"
 				t3.bullet_direction = perp_bullet_direction
 				t3.bullet_start = bullet_start
@@ -488,6 +575,7 @@ class eight_neighbor_grid(QWidget):
 				t4 = grid_worker(self)
 				t4.job = "bullet"
 				t4.player = "me"
+				t4.bullet_loc = None
 				t4.bullet_direction = self.get_opposite_direction(perp_bullet_direction)
 				t4.bullet_start = bullet_start
 				t4.num_cols = self.num_cols
@@ -495,19 +583,36 @@ class eight_neighbor_grid(QWidget):
 				t4.start()
 				self.worker_threads.append(t4)
 
+			if self.user_has_gem>2:
+				dirs = ["up_right","up_left","down_right","down_left"]
+				for d in dirs:
+					temp = grid_worker(self)
+					temp.job = "bullet"
+					temp.player = "me"
+					temp.bullet_direction = d 
+					temp.bullet_loc = None
+					temp.bullet_start = bullet_start
+					temp.num_rows = self.num_rows 
+					temp.num_cols = self.num_cols 
+					temp.start()
+					self.worker_threads.append(temp)
+
 			self.clean_worker_threads()			
 
+			if self.user_has_gem>2:
+				return [None,t.bullet_start,None,"ALL"]
 			if self.user_has_gem==1:
-				return [t.bullet_direction,t.bullet_start,t2.bullet_direction]
+				return [t.bullet_direction,t.bullet_start,t2.bullet_direction,None]
 			elif self.user_has_gem>1:
-				return [None,t.bullet_start,None]
+				return [None,t.bullet_start,None,None]
 			else:
-				return [t.bullet_direction,t.bullet_start,None]
+				return [t.bullet_direction,t.bullet_start,None,None]
 
 	def opponent_shoot(self,bullet_direction,start_x,start_y):
 		t = grid_worker(self)
 		t.job = "bullet"
 		t.player = "opponent"
+		t.bullet_loc = None 
 		t.bullet_direction = bullet_direction
 		t.bullet_start = [int(start_x),int(start_y)]
 		t.num_cols = self.num_cols
@@ -788,6 +893,13 @@ class main_window(QWidget):
 			self.grid.opponent_shoot(bullet_direction="left",start_x=x,start_y=y)
 			self.grid.opponent_shoot(bullet_direction="right",start_x=x,start_y=y)
 
+		if items[0]=="shootall":
+			x = items[1].split(":")[1]
+			y = items[2].split(":")[1]
+			dirs = ["up","down","left","right","up_right","down_right","up_left","down_left"]
+			for d in dirs:
+				self.grid.opponent_shoot(bullet_direction=d,start_x=x,start_y=y)
+
 		if items[0]=="move":
 			x = items[1].split(":")[1]
 			y = items[2].split(":")[1]
@@ -865,8 +977,12 @@ class main_window(QWidget):
 
 		if action!=None:
 			if action=="shoot": 
-				bullet_direction, bullet_start, o_bullet_direction = self.grid.action(action)
-				if bullet_direction==None and o_bullet_direction==None:
+				bullet_direction, bullet_start, o_bullet_direction, extra = self.grid.action(action)
+
+				if extra!=None:
+					if extra=="ALL":
+						message = "shootall|x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
+				elif bullet_direction==None and o_bullet_direction==None:
 					message = "shoot4|x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
 				elif o_bullet_direction==None:
 					message = "shoot|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])
