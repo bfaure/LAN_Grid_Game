@@ -215,9 +215,6 @@ class eight_neighbor_grid(QWidget):
 				if self.current_location!=None:
 					if t.bullet_loc[0]==self.current_location[0] and t.bullet_loc[1]==self.current_location[1] and t.player=="opponent":
 						self.game_over = True 
-				if self.opponent_location!=None:
-					if t.bullet_loc[0]==self.opponent_location[0] and t.bullet_loc[1]==self.opponent_location[1] and t.player=="me":
-						self.game_over = True 
 
 	def get_cell_state(self,x,y):
 		return self.cells[y][x].state()
