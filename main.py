@@ -200,14 +200,10 @@ class eight_neighbor_grid(QWidget):
 
 				move_m = 2
 
-				if t.bullet_direction == "right":
-					qp.drawEllipse(render_loc[0]+(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
-				if t.bullet_direction == "left":
-					qp.drawEllipse(render_loc[0]-(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
-				if t.bullet_direction == "up":
-					qp.drawEllipse(render_loc[0]+6,render_loc[1]-(t.bullet_loc[2]*move_m),4,4)
-				if t.bullet_direction in ["down"]:
-					qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.bullet_loc[2]*move_m),4,4)
+				if t.bullet_direction == "right": qp.drawEllipse(render_loc[0]+(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
+				if t.bullet_direction == "left": qp.drawEllipse(render_loc[0]-(t.bullet_loc[2]*move_m),render_loc[1]+6,4,4)
+				if t.bullet_direction == "up": qp.drawEllipse(render_loc[0]+6,render_loc[1]-(t.bullet_loc[2]*move_m),4,4)
+				if t.bullet_direction in ["down"]: qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.bullet_loc[2]*move_m),4,4)
 
 				if self.current_location!=None:
 					if t.bullet_loc[0]==self.current_location[0] and t.bullet_loc[1]==self.current_location[1] and t.player=="opponent":
@@ -435,6 +431,7 @@ class main_window(QWidget):
 		if items[0]=="new":
 			self.connect(opp_ip=items[1])
 			x,y = self.grid.set_current_location("opposite")
+			self.grid.opponent_location = [0,0]
 			sender = sender_thread()
 			sender.host = self.opponent_ip
 			sender.message = "move|x:"+str(x)+"|y:"+str(y)
@@ -477,6 +474,7 @@ class main_window(QWidget):
 		self.set_connected(True)
 
 		if opp_ip==None:
+			self.grid.set_current_location("standard")
 			sender = sender_thread()
 			sender.host = self.opponent_ip
 			sender.message = "new|"+str(gethostbyname(gethostname()))
