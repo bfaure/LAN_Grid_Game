@@ -213,10 +213,10 @@ class eight_neighbor_grid(QWidget):
 					qp.drawEllipse(render_loc[0]+6,render_loc[1]+(t.bullet_loc[2]*move_m),4,4)
 
 				if self.current_location!=None:
-					if t.bullet_loc[0]==self.current_location[0] and t.bullet_loc[1]==self.current_location[1]:
+					if t.bullet_loc[0]==self.current_location[0] and t.bullet_loc[1]==self.current_location[1] and t.player=="opponent":
 						self.game_over = True 
 				if self.opponent_location!=None:
-					if t.bullet_loc[0]==self.opponent_location[0] and t.bullet_loc[1]==self.opponent_location[1]:
+					if t.bullet_loc[0]==self.opponent_location[0] and t.bullet_loc[1]==self.opponent_location[1] and t.player=="me":
 						self.game_over = True 
 
 	def get_cell_state(self,x,y):
@@ -278,6 +278,7 @@ class eight_neighbor_grid(QWidget):
 		if what=="shoot":
 			t = grid_worker(self)
 			t.job = "bullet"
+			t.player = "me"
 			t.bullet_direction = self.last_direction
 			t.bullet_start = self.get_cell_attrib(1) if self.current_location==None else self.current_location
 			t.num_cols = self.num_cols
@@ -290,6 +291,7 @@ class eight_neighbor_grid(QWidget):
 	def opponent_shoot(self,bullet_direction,start_x,start_y):
 		t = grid_worker(self)
 		t.job = "bullet"
+		t.player = "opponent"
 		t.bullet_direction = bullet_direction
 		t.bullet_start = [int(start_x),int(start_y)]
 		t.num_cols = self.num_cols
