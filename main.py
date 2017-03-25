@@ -547,6 +547,7 @@ class main_window(QWidget):
 	def game_over(self):
 		self.grid.set_current_location("opposite")
 		self.grid.opponent_move(0,0)
+		pyqt_app.processEvents()
 		sender = sender_thread()
 		sender.host = self.opponent_ip
 		sender.message = "restart| "
