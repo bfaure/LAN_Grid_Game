@@ -429,14 +429,13 @@ class main_window(QWidget):
 		if items[0]=="restart":
 			self.grid.setEnabled(False)
 			x,y = self.grid.set_current_location("standard")
-			'''
+			
 			sender = sender_thread()
 			sender.host = self.opponent_ip
 			sender.message = "move|x:"+str(x)+"|y:"+str(y)
 			sender.is_done=False
 			sender.start()
 			self.sender_threads.append(sender)
-			'''
 
 			sender2 = sender_thread()
 			sender2.host = self.opponent_ip
@@ -445,6 +444,8 @@ class main_window(QWidget):
 			sender2.start()
 			self.sender_threads.append(sender2)
 			self.grid.setEnabled(True)
+
+			self.grid.opponent_move(self.num_cols-1,self.num_rows-1)
 			return
 
 		if items[0]=="new":
