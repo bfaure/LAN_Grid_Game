@@ -420,14 +420,26 @@ class main_window(QWidget):
 
 		items = update.split("|")
 
+		if items[0]=="ready":
+			self.grid.setEnabled(True)
+
 		if items[0]=="restart":
+			self.grid.setEnabled(False)
 			x,y = self.grid.set_current_location("standard")
 			sender = sender_thread()
 			sender.host = self.opponent_ip
 			sender.message = "move|x:"+str(x)+"|y:"+str(y)
-			sender.start()
 			sender.is_done=False
+			sender.start()
 			self.sender_threads.append(sender)
+
+			sender2 = sender_thread()
+			sender2.host = self.opponent_ip
+			sender2.message = "ready| "
+			sender2.is_done = False
+			sender2.start()
+			self.sender_threads.append(sender2)
+			self.grid.setEnabled(True)
 			return
 
 		if items[0]=="new":
@@ -437,8 +449,8 @@ class main_window(QWidget):
 			sender = sender_thread()
 			sender.host = self.opponent_ip
 			sender.message = "move|x:"+str(x)+"|y:"+str(y)
-			sender.start()
 			sender.is_done=False
+			sender.start()
 			self.sender_threads.append(sender)
 			return
 
@@ -480,8 +492,8 @@ class main_window(QWidget):
 			sender = sender_thread()
 			sender.host = self.opponent_ip
 			sender.message = "new|"+str(gethostbyname(gethostname()))
-			sender.start()
 			sender.is_done = False 
+			sender.start()
 			self.sender_threads.append(sender)
 
 	def disconnect(self):
@@ -517,8 +529,8 @@ class main_window(QWidget):
 				sender = sender_thread()
 				sender.host = self.opponent_ip
 				sender.message = message
-				sender.start()
 				sender.is_done=False
+				sender.start()
 				self.sender_threads.append(sender)
 				self.clean_sender_threads()
 
@@ -529,13 +541,13 @@ class main_window(QWidget):
 
 	def game_over(self):
 		self.grid.set_current_location("opposite")
-
 		sender = sender_thread()
 		sender.host = self.opponent_ip
 		sender.message = "restart| "
-		sender.start()
 		sender.is_done = False 
+		sender.start()
 		self.sender_threads.append(sender)
+		self.grid.setEnabled(False)
 
 def main():
 	global pyqt_app
