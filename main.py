@@ -890,6 +890,7 @@ class main_window(QWidget):
 			sender.is_done=False
 			sender.start()
 			self.sender_threads.append(sender)
+			self.grid.repaint()
 			return
 
 		if items[0]=="shoot":
@@ -962,7 +963,9 @@ class main_window(QWidget):
 			sender.message = "new|"+str(gethostbyname(gethostname()))+"|"+self.current_grid_file
 			sender.is_done = False 
 			sender.start()
+			self.grid.opponent_location = [self.grid.num_cols-1,self.grid.num_rows-1]
 			self.sender_threads.append(sender)
+			self.grid.repaint()
 
 	def disconnect(self):
 		if self.opponent_ip!=None:
