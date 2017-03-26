@@ -7,10 +7,12 @@ print("Building binary...")
 if sys.platform in ["apple","Apple","darwin","Darwin"]:
 	print("Found OS: Mac")
 	targ_folder = "bin/Mac"
+	command = "pyinstaller --clean --onefile -w main.py --distpath="+targ_folder
 
 if sys.platform in ["win32"]: 
 	print("Found OS: Windows")
 	targ_folder = "bin/Windows"
+	command = "pyinstaller --clean --onefile main.py --distpath="+targ_folder
 
 if not os.path.isdir(targ_folder):
 	print("Creating "+targ_folder)
@@ -20,9 +22,7 @@ else:
 	shutil.rmtree(targ_folder)
 	os.mkdir(targ_folder)
 
-command = "pyinstaller --clean --onefile main.py --distpath="+targ_folder
 print("Calling: "+command)
-
 try:
 	os.system(command)
 except:
