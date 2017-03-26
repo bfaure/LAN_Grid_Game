@@ -773,6 +773,7 @@ class main_window(QWidget):
 		self.menu_selection_sound = QSound("resources/sounds/341695__projectsu012__coins-1.wav")
 		self.shoot_sound = QSound("resources/sounds/126423__cabeeno-rossley__shoot-laser.wav")
 		self.dead_sound = QSound("resources/sounds/350985__cabled-mess__lose-c-02.wav")
+		self.win_sound = QSound("resources/sounds/126421__cabeeno-rossley__level-complete.wav")
 		
 		self.receiver = receive_thread()
 		self.receiver.start()
@@ -848,6 +849,8 @@ class main_window(QWidget):
 			self.grid.opponent_move(0,0)
 
 		if items[0]=="restart":
+			self.win_sound.play()
+			sleep(0.5)
 			self.grid.setEnabled(False)
 			x,y = self.grid.set_current_location("standard")
 			
