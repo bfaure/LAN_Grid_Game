@@ -3,7 +3,7 @@ Game played over local wifi connection
 
 Player 1                   |  Player 2
 :-------------------------:|:-------------------------:
-![](https://github.com/bfaure/wifi_grid_game/blob/master/resources/screenshot_mac.png)  |  ![](https://github.com/bfaure/wifi_grid_game/blob/master/resources/screenshot_windows.PNG)
+![](https://github.com/bfaure/wifi_grid_game/blob/master/resources/pictures/screenshot_mac.png)  |  ![](https://github.com/bfaure/wifi_grid_game/blob/master/resources/pictures/screenshot_windows.PNG)
 
 ## Instructions
 Arrow keys to move, spacebar to shoot. Blocks are descructible, gems may be hidden underneath. 
