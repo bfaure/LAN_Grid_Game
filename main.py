@@ -35,7 +35,7 @@ class grid_worker(QThread):
 
 	def __init__(self,parent=None):
 		QThread.__init__(self,parent)
-		self.connect(self,SIGNAL("update_grid()"),parent.repaint)
+		#self.connect(self,SIGNAL("update_grid()"),parent.repaint)
 		self.exiting = False 
 		self.job = None 
 
@@ -217,13 +217,13 @@ class eight_neighbor_grid(QWidget):
 
 		self.init_blocked_cells()
 
-	def init_blocked_cells(self):
+	def init_blocked_cells(self,generate=False,grid_name="grid"):
 
 		self.user_health = 10
 		self.user_has_gem = 0
 		self.blocked_cells = []
 		self.blocked_cell_life = []
-		generate = False
+
 		if generate:
 			num_blocked_cells = 150
 
@@ -271,14 +271,14 @@ class eight_neighbor_grid(QWidget):
 									self.blocked_cells.append([x,y])
 									self.blocked_cell_life.append(5)
 
-			f = open("grid","w")
+			f = open("resources/grids/"+grid_name,"w")
 			for coord,health in zip(self.blocked_cells,self.blocked_cell_life):
 				line = str(coord[0])+","+str(coord[1])+" "+str(health)+"\n"
 				f.write(line)
 			f.write("end")
 			f.close()
 		else:
-			f = open("grid","r")
+			f = open("resources/grids/"+grid_name,"r")
 			lines = f.read().split("\n")
 			for line in lines:
 				if line.find("end")!=-1: break
@@ -321,6 +321,7 @@ class eight_neighbor_grid(QWidget):
 
 	def init_ui(self):
 		# initialize ui elements
+		self.gem_sound = QSound("resources/sounds/126422__cabeeno-rossley__level-up.wav")
 		self.worker_threads = []
 		self.gem_locations = None
 		self.grid_line_color = [0,0,0]
@@ -403,8 +404,7 @@ class eight_neighbor_grid(QWidget):
 			idx = self.gem_locations.index([self.current_location[0],self.current_location[1]])
 			del self.gem_locations[idx]
 			self.user_has_gem += 1
-			sound_file = "resources/126422__cabeeno-rossley__level-up.wav"
-			QSound(sound_file).play()
+			self.gem_sound.play()
 
 		if self.opponent_location!=None:
 			x = self.opponent_location[0]
@@ -486,7 +486,6 @@ class eight_neighbor_grid(QWidget):
 			print("ERROR: get_start_cell() could not find open cell")
 			return
 		self.cells[y][x].set_occupied()
-		self.repaint()
 
 	def get_cell_attrib(self,attrib=1):
 		for y in range(self.num_rows):
@@ -521,7 +520,6 @@ class eight_neighbor_grid(QWidget):
 		self.cells[cur_y][cur_x].set_free()
 		self.cells[y][x].set_occupied()
 		self.current_location = [x,y]
-		self.repaint()
 		return [x,y]
 
 	def clean_worker_threads(self):
@@ -627,7 +625,6 @@ class eight_neighbor_grid(QWidget):
 
 	def opponent_move(self,x,y):
 		self.opponent_location = [int(x),int(y)]
-		self.repaint()
 
 	def set_current_location(self,location_descriptor):
 		if location_descriptor=="opposite":
@@ -637,7 +634,6 @@ class eight_neighbor_grid(QWidget):
 						self.cells[y][x].set_free()
 			self.current_location = [self.num_cols-1,self.num_rows-1]
 			self.cells[self.num_rows-1][self.num_cols-1].set_occupied()
-			self.repaint()
 			return [self.num_cols-1,self.num_rows-1]
 		if location_descriptor=="standard":
 			for y in range(self.num_rows):
@@ -646,7 +642,6 @@ class eight_neighbor_grid(QWidget):
 						self.cells[y][x].set_free()
 			self.current_location = [0,0]
 			self.cells[0][0].set_occupied()
-			self.repaint()
 			return [0,0]
 
 class sender_thread(QThread):
@@ -781,6 +776,7 @@ class main_window(QWidget):
 		self.num_cols = 35
 		self.num_rows = 25
 		self.set_connected(False)
+		self.current_grid_file = "grid"
 		self.init_ui()
 		self.start_character()
 
@@ -800,10 +796,12 @@ class main_window(QWidget):
 			self.setWindowTitle("Me: ("+cur_ip+") - Not Connected")
 
 	def init_ui(self):
-
+		self.menu_selection_sound = QSound("resources/sounds/341695__projectsu012__coins-1.wav")
+		self.shoot_sound = QSound("resources/sounds/126423__cabeeno-rossley__shoot-laser.wav")
+		self.dead_sound = QSound("resources/sounds/350985__cabled-mess__lose-c-02.wav")
+		
 		self.receiver = receive_thread()
 		self.receiver.start()
-
 		self.sender_threads = []
 
 		QObject.connect(self.receiver,SIGNAL("got_message(QString)"),self.receive_update)
@@ -834,9 +832,19 @@ class main_window(QWidget):
 		connection_menu.addAction("Connect",self.connect,QKeySequence("Ctrl+C"))
 		connection_menu.addAction("Disconnect",self.disconnect)
 
+		game_menu = self.toolbar.addMenu("Game")
+		game_menu.addAction("Change Map",self.change_map,QKeySequence("Ctrl+L"))
+
 		self.setFixedWidth(self.min_width)
 		self.setFixedHeight(self.min_height)
 		self.show()
+
+	def change_map(self):
+		current_location = os.getcwd()
+		filename = QFileDialog.getOpenFileName(self,"Select Map",current_location+"/resources/grids")
+		if filename != "":
+			self.grid.init_blocked_cells(generate=False,grid_name=filename.split("/")[-1])
+			self.current_grid_file = filename.split("/")[-1]
 
 	def receive_update(self,update):
 		if len(update)==0: return 
@@ -872,6 +880,8 @@ class main_window(QWidget):
 
 		if items[0]=="new":
 			self.connect(opp_ip=items[1])
+			self.current_grid_file = items[2]
+			self.grid.init_blocked_cells(generate=False,grid_name=self.current_grid_file)
 			x,y = self.grid.set_current_location("opposite")
 			self.grid.opponent_location = [0,0]
 			sender = sender_thread()
@@ -935,20 +945,7 @@ class main_window(QWidget):
 
 	def connect(self,opp_ip=None):
 		if opp_ip==None:
-			'''
-			while True:
-				resp,ok = QInputDialog.getText(self,"Connection","Enter IP (192.168.1.x): ")
-				if not ok: return 
-
-				broken = resp.split(".")
-				if len(broken)==4:
-					for b in broken:
-						try:
-							int(b)
-						except:
-							continue 
-					break
-			'''
+			self.menu_selection_sound.play()
 			self.hide()
 			self.ip_dialog_window.show()
 			return
@@ -962,7 +959,7 @@ class main_window(QWidget):
 			self.grid.set_current_location("standard")
 			sender = sender_thread()
 			sender.host = self.opponent_ip
-			sender.message = "new|"+str(gethostbyname(gethostname()))
+			sender.message = "new|"+str(gethostbyname(gethostname()))+"|"+self.current_grid_file
 			sender.is_done = False 
 			sender.start()
 			self.sender_threads.append(sender)
@@ -1002,8 +999,7 @@ class main_window(QWidget):
 				else:
 					message = "shoot2|"+bullet_direction+"|"+"x:"+str(bullet_start[0])+"|y:"+str(bullet_start[1])+"|"+o_bullet_direction
 
-				shoot_sound = "resources/126423__cabeeno-rossley__shoot-laser.wav"
-				QSound.play(shoot_sound)
+				self.shoot_sound.play()
 
 			else: 
 				new_location = self.grid.move(action)
@@ -1026,6 +1022,7 @@ class main_window(QWidget):
 	def game_over(self):
 		user_health = self.grid.user_health
 		if user_health<=0:
+			self.dead_sound.play()
 			self.grid.set_current_location("opposite")
 			pyqt_app.processEvents()
 			if self.opponent_ip!=None:
@@ -1038,7 +1035,7 @@ class main_window(QWidget):
 				self.sender_threads.append(sender)
 			self.grid.init_blocked_cells()
 			self.grid.setEnabled(False)
-			self.grid.repaint()
+			self.set_health(10)
 		else:
 			self.set_health(user_health)
 
