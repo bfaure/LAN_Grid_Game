@@ -596,7 +596,7 @@ class eight_neighbor_grid(QWidget):
 
 	def opponent_shoot(self,bullet_direction,start_x,start_y):
 		self.create_bullet(player="opponent",bullet_direction=bullet_direction,bullet_start=[int(start_x),int(start_y)])
-		
+
 	def opponent_move(self,x,y):
 		self.opponent_location = [int(x),int(y)]
 
@@ -979,6 +979,8 @@ class main_window(QWidget):
 		self.grid.get_start_cell()
 
 	def keyPressEvent(self,e):
+		if e.isAutoRepeat(): return
+
 		action = None
 		if e.key() == Qt.Key_Left: action="left"
 		if e.key() == Qt.Key_Right: action="right"
