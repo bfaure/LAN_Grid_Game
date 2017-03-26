@@ -16,7 +16,4 @@ Run `python main.py` to open UI. Click on `Connect` menu option under `Connectio
 * `PyQt4`
 
 # Binaries
-Download the entire folder. For Windows, double-click the main.exe file. For Mac, either double-click or open terminal, navigate to the downloaded folder, and run `./main`.
-
-[Windows](https://drive.google.com/open?id=0BxJe_Ggl7BIgMUpEZkdwUjRlYVk)
-[Mac](https://drive.google.com/open?id=0BxJe_Ggl7BIgMktrOGhRY0Z5MzA)
+Binaries for Windows and Mac can be found in the /bin directory. For Windows you can just double click the main.exe file, for Mac you may have to open terminal, navigate to the bin/Mac folder and run `./main` to get the game to open correctly. The folders in /bin can be created by calling `python build.py` so long as you have pyinstaller installed already.
