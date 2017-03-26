@@ -859,6 +859,11 @@ class main_window(QWidget):
 
 		items = update.split("|")
 
+		if items[0]=="disconnect":
+			self.opponent_ip = None 
+			self.grid.opponent_location = None 
+			self.set_connected(False)
+
 		if items[0]=="map":
 			self.current_grid_file = items[1]
 			self.grid.init_blocked_cells(generate=False,grid_name=self.current_grid_file)
@@ -888,7 +893,6 @@ class main_window(QWidget):
 
 			self.grid.init_blocked_cells()
 			self.grid.opponent_move(self.num_cols-1,self.num_rows-1)
-			return
 
 		if items[0]=="new":
 			self.connect(opp_ip=items[1])
@@ -903,14 +907,12 @@ class main_window(QWidget):
 			sender.start()
 			self.sender_threads.append(sender)
 			self.grid.repaint()
-			return
 
 		if items[0]=="shoot":
 			bullet_direction = items[1]
 			x = items[2].split(":")[1]
 			y = items[3].split(":")[1]
 			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
-			return
 
 		if items[0]=="shoot2":
 			bullet_direction = items[1]
@@ -919,7 +921,6 @@ class main_window(QWidget):
 			y = items[3].split(":")[1]
 			self.grid.opponent_shoot(bullet_direction=bullet_direction,start_x=x,start_y=y)
 			self.grid.opponent_shoot(bullet_direction=bullet_direction2,start_x=x,start_y=y)
-			return
 
 		if items[0]=="shoot4":
 			x = items[1].split(":")[1]
@@ -940,7 +941,6 @@ class main_window(QWidget):
 			x = items[1].split(":")[1]
 			y = items[2].split(":")[1]
 			self.grid.opponent_move(x,y)
-			return
 
 	def got_ip(self):
 		self.opponent_ip = self.ip_dialog_window.full_ip
