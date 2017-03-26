@@ -1,4 +1,4 @@
-# [wifi_grid_game](https://www.youtube.com/watch?v=jsaZqIAFxsE)
+# [wifi_grid_game](https://www.youtube.com/watch?v=hrKXdNcnNQw)
 Game played over local wifi connection
 
 Player 1                   |  Player 2
