@@ -48,7 +48,7 @@ class grid_worker(QThread):
 			time_per_increment = float(float(time_per_cell)/float(increments_per_cell))
 
 			if self.bullet_direction=="left":
-				for i in range(-1,cur_x):
+				for i in range(0,cur_x+1):
 					if self.exiting: break
 					x_spot = cur_x-i
 					y_spot = cur_y
@@ -66,7 +66,7 @@ class grid_worker(QThread):
 						sleep(time_per_increment)
 					
 			if self.bullet_direction=="up":
-				for i in range(-1,cur_y):
+				for i in range(0,cur_y+1):
 					if self.exiting: break
 					x_spot = cur_x 
 					y_spot = cur_y-i
@@ -87,14 +87,14 @@ class grid_worker(QThread):
 				y_span = cur_y 
 				x_span = cur_x 
 				if y_span>x_span:
-					for i in range(-1,cur_y):
+					for i in range(0,cur_y+1):
 						y_spot = cur_y-i 
 						x_spot = cur_x-i
 						for j in range(increments_per_cell):
 							self.bullet_loc = [x_spot,y_spot,j]
 							sleep(time_per_increment)
 				else:
-					for i in range(-1,cur_x):
+					for i in range(0,cur_x+1):
 						y_spot = cur_y-i 
 						x_spot = cur_x-i
 						for j in range(increments_per_cell):
@@ -105,7 +105,7 @@ class grid_worker(QThread):
 				y_span = cur_y 
 				x_span = self.num_cols-cur_x
 				if y_span>x_span:
-					for i in range(-1,cur_y):
+					for i in range(0,cur_y+1):
 						y_spot = cur_y-i
 						x_spot = cur_x+i
 						for j in range(increments_per_cell):
@@ -306,8 +306,12 @@ class eight_neighbor_grid(QWidget):
 				w.exiting=True
 				del self.worker_threads[self.worker_threads.index(w)]
 
-		num_bots = 7
+		num_bots = 8
 		bots = 0
+
+		for w in self.worker_threads:
+			if w.job=="bot":
+				bots+=1
 
 		while bots<num_bots:
 			new_bot = grid_worker(self)
