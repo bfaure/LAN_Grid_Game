@@ -271,14 +271,16 @@ class eight_neighbor_grid(QWidget):
 									self.blocked_cells.append([x,y])
 									self.blocked_cell_life.append(5)
 
-			f = open("resources/grids/"+grid_name,"w")
+			current_location = os.getcwd()
+			f = open(current_location+"/resources/grids/"+grid_name,"w")
 			for coord,health in zip(self.blocked_cells,self.blocked_cell_life):
 				line = str(coord[0])+","+str(coord[1])+" "+str(health)+"\n"
 				f.write(line)
 			f.write("end")
 			f.close()
 		else:
-			f = open("resources/grids/"+grid_name,"r")
+			current_location = os.getcwd()
+			f = open(current_location+"/resources/grids/"+grid_name,"r")
 			lines = f.read().split("\n")
 			for line in lines:
 				if line.find("end")!=-1: break

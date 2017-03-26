@@ -36,8 +36,12 @@ if os.path.isdir("build"):
 if os.path.isfile("main.spec"):
 	os.remove("main.spec")
 
+
 print("Copying resources...")
-shutil.copytree("resources",targ_folder+"/resources")
+if sys.platform in ["win32"]:
+	shutil.copytree("resources",targ_folder+"/resources")
+if sys.platform in ["apple","Apple","darwin","Darwin"]:
+	shutil.copytree("resources",targ_folder+"/main.app/Contents/MacOS/resources")
 
 print("\n")
 print("The compiled binary can be found at "+targ_folder)
