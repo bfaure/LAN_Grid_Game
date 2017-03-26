@@ -938,7 +938,7 @@ class main_window(QWidget):
 			self.grid.set_current_location("standard")
 			sender = sender_thread()
 			sender.host = self.opponent_ip
-			sender.message = "new|"+str(gethostbyname(gethostname()))
+			sender.message = "new|"+str(gethostbyname(gethostname()))+"|"+self.current_grid_file
 			sender.is_done = False 
 			sender.start()
 			self.sender_threads.append(sender)
