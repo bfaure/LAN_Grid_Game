@@ -568,73 +568,20 @@ class eight_neighbor_grid(QWidget):
 			bullet_direction = self.last_direction
 
 			self.create_bullet(player="me",bullet_direction=bullet_direction,bullet_start=bullet_start)
-			#t = grid_worker(self)
-			#t.job = "bullet"
-			#t.player = "me"
-			#t.bullet_direction = bullet_direction
-			#t.bullet_start = bullet_start
-			#t.bullet_loc = None
-			#self.start_worker(t)
 
 			if self.user_has_gem>0:
 				self.create_bullet(player="me",bullet_direction=self.get_opposite_direction(bullet_direction),bullet_start=bullet_start)
-				#t2 = grid_worker(self)
-				#t2.bullet_loc = None 
-				#t2.job = "bullet"
-				#t2.player = "me"
-				#t2.bullet_direction = self.get_opposite_direction(bullet_direction)
-				#t2.bullet_start = bullet_start
-				#t2.num_cols = self.num_cols
-				#t2.num_rows = self.num_rows
-				#t2.start()
-				#self.worker_threads.append(t2)
-				#self.start_worker(t2)
 
 			if self.user_has_gem>1:
 				if bullet_direction in ["left","right"]: perp_bullet_direction = "up"
 				else: perp_bullet_direction = "left"
 				self.create_bullet(player="me",bullet_direction=perp_bullet_direction,bullet_start=bullet_start)
-				#t3 = grid_worker(self)
-				#t3.job = "bullet"
-				#t3.bullet_loc = None
-				#t3.player = "me"
-				#t3.bullet_direction = perp_bullet_direction
-				#t3.bullet_start = bullet_start
-				#t3.num_cols = self.num_cols
-				#t3.num_rows = self.num_rows
-				#t3.start()
-				#self.worker_threads.append(t3)
-				#self.start_worker(t3)
 				self.create_bullet(player="me",bullet_direction=self.get_opposite_direction(perp_bullet_direction),bullet_start=bullet_start)
-
-
-				#t4 = grid_worker(self)
-				#t4.job = "bullet"
-				#t4.player = "me"
-				#t4.bullet_loc = None
-				#t4.bullet_direction = self.get_opposite_direction(perp_bullet_direction)
-				#t4.bullet_start = bullet_start
-				#t4.num_cols = self.num_cols
-				#t4.num_rows = self.num_rows
-				#t4.start()
-				#self.worker_threads.append(t4)
-				#self.start_worker(t4)
 
 			if self.user_has_gem>2:
 				dirs = ["up_right","up_left","down_right","down_left"]
 				for d in dirs:
 					self.create_bullet(player="me",bullet_direction=d,bullet_start=bullet_start)
-					#temp = grid_worker(self)
-					#temp.job = "bullet"
-					#temp.player = "me"
-					#temp.bullet_direction = d 
-					#temp.bullet_loc = None
-					#temp.bullet_start = bullet_start
-					#temp.num_rows = self.num_rows 
-					#temp.num_cols = self.num_cols 
-					#temp.start()
-					#self.worker_threads.append(temp)
-					#self.start_worker(temp)
 
 			self.clean_worker_threads()			
 
@@ -648,18 +595,8 @@ class eight_neighbor_grid(QWidget):
 				return [bullet_direction,bullet_start,None,None]
 
 	def opponent_shoot(self,bullet_direction,start_x,start_y):
-		t = grid_worker(self)
-		t.job = "bullet"
-		t.player = "opponent"
-		t.bullet_loc = None 
-		t.bullet_direction = bullet_direction
-		t.bullet_start = [int(start_x),int(start_y)]
-		#t.num_cols = self.num_cols
-		#t.num_rows = self.num_rows
-		#self.worker_threads.append(t)
-		#t.start()
-		self.start_worker(t)
-
+		self.create_bullet(player="opponent",bullet_direction=bullet_direction,bullet_start=[int(start_x),int(start_y)])
+		
 	def opponent_move(self,x,y):
 		self.opponent_location = [int(x),int(y)]
 
