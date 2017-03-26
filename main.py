@@ -550,87 +550,102 @@ class eight_neighbor_grid(QWidget):
 		except:
 			print("Could not start worker with job "+worker.job)
 
+	def create_bullet(self,player="me",bullet_direction="None",bullet_start="None"):
+		try:
+			temp = grid_worker(self)
+		except:
+			print("Could not create a new grid worker!")
+		temp.job = "bullet"
+		temp.player = player 
+		temp.bullet_direction = bullet_direction 
+		temp.bullet_start = bullet_start
+		temp.bullet_loc = None 
+		self.start_worker(temp)
+
 	def action(self,what="shoot"):
 		if what=="shoot":
 			bullet_start = self.get_cell_attrib(1) if self.current_location==None else self.current_location
 			bullet_direction = self.last_direction
 
-			t = grid_worker(self)
-			t.job = "bullet"
-			t.player = "me"
-			t.bullet_direction = bullet_direction
-			t.bullet_start = bullet_start
-			t.bullet_loc = None
-			#t.num_cols = self.num_cols
-			#t.num_rows = self.num_rows
-			#self.worker_threads.append(t)
-			self.start_worker(t)
+			self.create_bullet(player="me",bullet_direction=bullet_direction,bullet_start=bullet_start)
+			#t = grid_worker(self)
+			#t.job = "bullet"
+			#t.player = "me"
+			#t.bullet_direction = bullet_direction
+			#t.bullet_start = bullet_start
+			#t.bullet_loc = None
+			#self.start_worker(t)
 
 			if self.user_has_gem>0:
-				t2 = grid_worker(self)
-				t2.bullet_loc = None 
-				t2.job = "bullet"
-				t2.player = "me"
-				t2.bullet_direction = self.get_opposite_direction(bullet_direction)
-				t2.bullet_start = bullet_start
+				self.create_bullet(player="me",bullet_direction=self.get_opposite_direction(bullet_direction),bullet_start=bullet_start)
+				#t2 = grid_worker(self)
+				#t2.bullet_loc = None 
+				#t2.job = "bullet"
+				#t2.player = "me"
+				#t2.bullet_direction = self.get_opposite_direction(bullet_direction)
+				#t2.bullet_start = bullet_start
 				#t2.num_cols = self.num_cols
 				#t2.num_rows = self.num_rows
 				#t2.start()
 				#self.worker_threads.append(t2)
-				self.start_worker(t2)
+				#self.start_worker(t2)
 
 			if self.user_has_gem>1:
 				if bullet_direction in ["left","right"]: perp_bullet_direction = "up"
 				else: perp_bullet_direction = "left"
-				t3 = grid_worker(self)
-				t3.job = "bullet"
-				t3.bullet_loc = None
-				t3.player = "me"
-				t3.bullet_direction = perp_bullet_direction
-				t3.bullet_start = bullet_start
+				self.create_bullet(player="me",bullet_direction=perp_bullet_direction,bullet_start=bullet_start)
+				#t3 = grid_worker(self)
+				#t3.job = "bullet"
+				#t3.bullet_loc = None
+				#t3.player = "me"
+				#t3.bullet_direction = perp_bullet_direction
+				#t3.bullet_start = bullet_start
 				#t3.num_cols = self.num_cols
 				#t3.num_rows = self.num_rows
 				#t3.start()
 				#self.worker_threads.append(t3)
-				self.start_worker(t3)
+				#self.start_worker(t3)
+				self.create_bullet(player="me",bullet_direction=self.get_opposite_direction(perp_bullet_direction),bullet_start=bullet_start)
 
-				t4 = grid_worker(self)
-				t4.job = "bullet"
-				t4.player = "me"
-				t4.bullet_loc = None
-				t4.bullet_direction = self.get_opposite_direction(perp_bullet_direction)
-				t4.bullet_start = bullet_start
+
+				#t4 = grid_worker(self)
+				#t4.job = "bullet"
+				#t4.player = "me"
+				#t4.bullet_loc = None
+				#t4.bullet_direction = self.get_opposite_direction(perp_bullet_direction)
+				#t4.bullet_start = bullet_start
 				#t4.num_cols = self.num_cols
 				#t4.num_rows = self.num_rows
 				#t4.start()
 				#self.worker_threads.append(t4)
-				self.start_worker(t4)
+				#self.start_worker(t4)
 
 			if self.user_has_gem>2:
 				dirs = ["up_right","up_left","down_right","down_left"]
 				for d in dirs:
-					temp = grid_worker(self)
-					temp.job = "bullet"
-					temp.player = "me"
-					temp.bullet_direction = d 
-					temp.bullet_loc = None
-					temp.bullet_start = bullet_start
+					self.create_bullet(player="me",bullet_direction=d,bullet_start=bullet_start)
+					#temp = grid_worker(self)
+					#temp.job = "bullet"
+					#temp.player = "me"
+					#temp.bullet_direction = d 
+					#temp.bullet_loc = None
+					#temp.bullet_start = bullet_start
 					#temp.num_rows = self.num_rows 
 					#temp.num_cols = self.num_cols 
 					#temp.start()
 					#self.worker_threads.append(temp)
-					self.start_worker(temp)
+					#self.start_worker(temp)
 
 			self.clean_worker_threads()			
 
 			if self.user_has_gem>2:
-				return [None,t.bullet_start,None,"ALL"]
+				return [None,bullet_start,None,"ALL"]
 			if self.user_has_gem==1:
-				return [t.bullet_direction,t.bullet_start,t2.bullet_direction,None]
+				return [bullet_direction,bullet_start,self.get_opposite_direction(bullet_direction),None]
 			elif self.user_has_gem>1:
-				return [None,t.bullet_start,None,None]
+				return [None,bullet_start,None,None]
 			else:
-				return [t.bullet_direction,t.bullet_start,None,None]
+				return [bullet_direction,bullet_start,None,None]
 
 	def opponent_shoot(self,bullet_direction,start_x,start_y):
 		t = grid_worker(self)
