@@ -7,7 +7,7 @@ print("Building binary...")
 if sys.platform in ["apple","Apple","darwin","Darwin"]:
 	print("Found OS: Mac")
 	targ_folder = "bin/Mac"
-	command = "pyinstaller --clean --onefile -w main.py --distpath="+targ_folder
+	command = "pyinstaller --clean --onefile main.py --distpath="+targ_folder
 
 if sys.platform in ["win32"]: 
 	print("Found OS: Windows")
@@ -38,10 +38,10 @@ if os.path.isfile("main.spec"):
 
 
 print("Copying resources...")
-if sys.platform in ["win32"]:
-	shutil.copytree("resources",targ_folder+"/resources")
-if sys.platform in ["apple","Apple","darwin","Darwin"]:
-	shutil.copytree("resources",targ_folder+"/main.app/Contents/MacOS/resources")
+#if sys.platform in ["win32"]:
+shutil.copytree("resources",targ_folder+"/resources")
+#if sys.platform in ["apple","Apple","darwin","Darwin"]:
+#	shutil.copytree("resources",targ_folder+"/main.app/Contents/MacOS/resources")
 
 print("\n")
 print("The compiled binary can be found at "+targ_folder)
