@@ -860,6 +860,7 @@ class main_window(QWidget):
 		items = update.split("|")
 
 		if items[0]=="disconnect":
+			print("Disconnecting from peer")
 			self.opponent_ip = None 
 			self.grid.opponent_location = None 
 			self.set_connected(False)
@@ -992,6 +993,9 @@ class main_window(QWidget):
 	def quit(self):
 		self.grid.frame_updater.stop=True
 		self.disconnect()
+		for s in self.sender_threads:
+			while not s.is_done:
+				sleep(0.1)
 		sys.exit(1)
 
 	def closeEvent(self,e):
