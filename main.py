@@ -846,10 +846,22 @@ class main_window(QWidget):
 			self.grid.init_blocked_cells(generate=False,grid_name=filename.split("/")[-1])
 			self.current_grid_file = filename.split("/")[-1]
 
+			if self.opponent_ip!=None:
+				sender = sender_thread()
+				sender.host = self.opponent_ip
+				sender.message = "map|"+self.current_grid_file
+				sender.is_done = False 
+				sender.start()
+				self.sender_threads.append(sender)
+
 	def receive_update(self,update):
 		if len(update)==0: return 
 
 		items = update.split("|")
+
+		if items[0]=="map":
+			self.current_grid_file = items[1]
+			self.grid.init_blocked_cells(generate=False,grid_name=self.current_grid_file)
 
 		if items[0]=="ready":
 			self.grid.setEnabled(True)
