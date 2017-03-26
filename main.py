@@ -965,10 +965,18 @@ class main_window(QWidget):
 			self.sender_threads.append(sender)
 
 	def disconnect(self):
+		if self.opponent_ip!=None:
+			sender = sender_thread()
+			sender.host = self.opponent_ip
+			sender.message = "disconnect| "
+			sender.is_done = False 
+			sender.start()
+			self.sender_threads.append(sender)
 		self.opponent_ip = None
 
 	def quit(self):
 		self.grid.frame_updater.stop=True
+		self.disconnect()
 		sys.exit(1)
 
 	def closeEvent(self,e):
